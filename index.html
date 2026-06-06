@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁智慧複習系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Config for customization -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome for fallback icons if needed, but we'll use inline SVGs for perfect speed and offline support -->
+    <link href="style.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col md:flex-row">
+
+    <!-- 頂部導覽列（行動裝置） -->
+    <div class="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40 w-full shadow-sm">
+        <div class="flex items-center space-x-2">
+            <svg class="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            <span class="font-bold text-lg text-slate-800 tracking-wider">智慧複習系統</span>
+        </div>
+        <button id="mobile-menu-btn" class="p-2 text-slate-500 hover:text-slate-800 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path id="mobile-menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- 側邊欄（電腦版） -->
+    <aside id="sidebar" class="bg-white border-r border-slate-200 w-full md:w-64 flex-shrink-0 flex flex-col md:sticky md:top-0 md:h-screen z-30 transition-all duration-300 transform -translate-x-full md:translate-x-0 absolute md:relative hidden md:flex shadow-md md:shadow-none">
+        <!-- Logo 區域 -->
+        <div class="p-6 border-b border-slate-100 flex items-center space-x-3">
+            <svg class="w-9 h-9 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            <span class="font-bold text-xl text-slate-800 tracking-wider">智慧複習系統</span>
+        </div>
+
+        <!-- 導覽選單 -->
+        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            <button data-tab="dashboard" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 active-tab">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span>首頁主畫面</span>
+            </button>
+            <button data-tab="questions" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span>考題庫管理</span>
+            </button>
+            <button data-tab="quiz-setup" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                <span>開始考題複習</span>
+            </button>
+        </nav>
+
+        <!-- 底部資訊 -->
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-400 text-center">
+            智慧複習系統 v1.0<br>本地離線資料庫保護中
+        </div>
+    </aside>
+
+    <!-- 主內容區 -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto h-screen p-4 md:p-8">
+
+        <!-- 1. 首頁主畫面 VIEW -->
+        <section id="view-dashboard" class="view-section space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800">歡迎回到複習系統</h1>
+                    <p class="text-slate-500 mt-1">今天也是充實自己、增強記憶的一天！</p>
+                </div>
+                <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 flex items-center space-x-2 text-slate-600 self-start shadow-sm">
+                    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path></svg>
+                    <span id="current-date" class="font-medium">2026年6月6日</span>
+                </div>
+            </div>
+
+            <!-- 數據統計網格 -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- 卡片 1 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium">總題庫數</p>
+                        <h3 id="stat-total-q" class="text-2xl font-bold text-slate-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+                <!-- 卡片 2 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium">考題分類數</p>
+                        <h3 id="stat-categories" class="text-2xl font-bold text-slate-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+                <!-- 卡片 3 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium">包含圖片考題</p>
+                        <h3 id="stat-image-q" class="text-2xl font-bold text-slate-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+                <!-- 卡片 4 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-400 font-medium">測驗完成次數</p>
+                        <h3 id="stat-quiz-count" class="text-2xl font-bold text-slate-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 首頁主要內容結構（左：快速開始，右：歷史記錄） -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左側：快速指引與動作 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-gradient-to-br from-primary-600 to-sky-500 text-white p-6 md:p-8 rounded-2xl shadow-md relative overflow-hidden">
+                        <div class="relative z-10 space-y-4 max-w-lg">
+                            <h2 class="text-xl md:text-2xl font-bold">隨時測試自己的記憶，告別死記硬背！</h2>
+                            <p class="text-sky-100 text-sm md:text-base leading-relaxed">
+                                本系統支援**考題與選項徹底綁定**，測驗時可選擇將**選項隨機打亂**。這樣你就不會因為記「這題答案是 A」而產生作弊記憶，每次複習都是真正的理解！有的題目還能上傳精彩圖片輔助記憶喔！
+                            </p>
+                            <button onclick="switchTab('quiz-setup')" class="bg-white text-primary-600 font-semibold px-6 py-2.5 rounded-xl shadow-md hover:bg-slate-50 transition duration-150 inline-flex items-center space-x-2">
+                                <span>立即開始複習</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        </div>
+                        <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10 scale-150">
+                            <svg class="w-72 h-72" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- 系統優勢與使用指南 -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-lg font-bold text-slate-800">💡 系統使用指南</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="p-4 bg-slate-50 rounded-xl space-y-2">
+                                <div class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <span class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">1</span>
+                                    <span>建立題庫</span>
+                                </div>
+                                <p class="text-slate-500 leading-relaxed">點選「考題庫管理」，開始建立您的個人考題，支援上傳輔助圖片，並設定多個選項與對應正確答案。</p>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl space-y-2">
+                                <div class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <span class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">2</span>
+                                    <span>開啟亂序</span>
+                                </div>
+                                <p class="text-slate-500 leading-relaxed">前往「開始考題複習」，勾選「選項隨機打亂」，讓選項順序每次不同，徹底測試你是否真的掌握核心答案！</p>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-xl space-y-2">
+                                <div class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <span class="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">3</span>
+                                    <span>匯出打包</span>
+                                </div>
+                                <p class="text-slate-500 leading-relaxed">不需擔心資料遺失！可隨時將題庫與圖片一鍵匯出成備份 JSON 檔，輕鬆帶到其他裝置隨時匯入複習。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：最近測驗紀錄 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center justify-between">
+                        <span>📊 最近測驗紀錄</span>
+                        <button id="clear-history-btn" class="text-xs text-red-500 hover:text-red-700 font-medium hidden">清除紀錄</button>
+                    </h3>
+                    <div id="dashboard-history-list" class="flex-1 space-y-3 overflow-y-auto max-h-[300px] pr-1 text-sm text-slate-500 flex flex-col justify-center items-center">
+                        <!-- 歷史記錄由 JS 動態生成 -->
+                        <svg class="w-12 h-12 text-slate-200 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>目前暫無測驗記錄，趕快去測驗一波吧！</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 考題庫管理 VIEW -->
+        <section id="view-questions" class="view-section space-y-6 hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800">考題庫管理</h1>
+                    <p class="text-slate-500 mt-1">您可以在此新增、編輯、搜尋以及備份考題與圖片資料。</p>
+                </div>
+                <div class="flex items-center space-x-3 self-start">
+                    <!-- 匯出按鈕 -->
+                    <button id="export-db-btn" class="bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold px-4 py-2.5 rounded-xl shadow-sm transition duration-150 flex items-center space-x-2 text-sm">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>匯出題庫</span>
+                    </button>
+                    <!-- 匯入按鈕 -->
+                    <label class="bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold px-4 py-2.5 rounded-xl shadow-sm transition duration-150 flex items-center space-x-2 text-sm cursor-pointer">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span>匯入題庫</span>
+                        <input type="file" id="import-db-file" accept=".json" class="hidden">
+                    </label>
+                    <!-- 新增按鈕 -->
+                    <button id="add-question-btn" class="bg-primary-500 text-white hover:bg-primary-600 font-semibold px-4 py-2.5 rounded-xl shadow-md transition duration-150 flex items-center space-x-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <span>新增考題</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜尋與篩選列 -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4">
+                <div class="flex-1 relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </span>
+                    <input type="text" id="search-q-input" placeholder="搜尋考題關鍵字、選項..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm">
+                </div>
+                <div class="flex gap-4">
+                    <select id="filter-category-select" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                        <option value="">全部分類</option>
+                        <!-- 由 JS 動態渲染分類選項 -->
+                    </select>
+                    <select id="filter-image-select" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                        <option value="">全部考題</option>
+                        <option value="with-image">僅看有圖片考題</option>
+                        <option value="no-image">僅看無圖片考題</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 考題列表容器 -->
+            <div id="questions-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 考題卡片由 JS 動態生成 -->
+            </div>
+
+            <!-- 當無考題時的空狀態 -->
+            <div id="questions-empty" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center flex flex-col justify-center items-center space-y-4">
+                <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">題庫目前是空的</h3>
+                    <p class="text-slate-500 text-sm mt-1">點選「新增考題」手動輸入，或點選「匯入題庫」上傳 JSON 範本檔吧！</p>
+                </div>
+                <button onclick="document.getElementById('add-question-btn').click()" class="bg-primary-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md hover:bg-primary-600 transition duration-150 inline-flex items-center space-x-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>手動建立第一題</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. 測驗設定 VIEW -->
+        <section id="view-quiz-setup" class="view-section space-y-6 hidden">
+            <div class="max-w-3xl mx-auto">
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800">開始複習與測驗</h1>
+                    <p class="text-slate-500 mt-2">設定您的偏好，打造最適合您的複習方案。</p>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                    <!-- 分類選擇 -->
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-slate-700 tracking-wide">1. 選擇測驗考題分類</label>
+                        <div id="quiz-category-container" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <!-- 分類單選按鈕由 JS 動態載入 -->
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- 題數選擇 -->
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-slate-700 tracking-wide">2. 選擇測驗題數</label>
+                        <div class="grid grid-cols-4 gap-3">
+                            <button type="button" data-limit="5" class="limit-btn border border-slate-200 hover:border-primary-500 hover:bg-primary-50/20 py-2.5 rounded-xl text-sm font-semibold text-slate-600 transition">5 題</button>
+                            <button type="button" data-limit="10" class="limit-btn border border-slate-200 hover:border-primary-500 hover:bg-primary-50/20 py-2.5 rounded-xl text-sm font-semibold text-slate-600 active-limit transition">10 題</button>
+                            <button type="button" data-limit="20" class="limit-btn border border-slate-200 hover:border-primary-500 hover:bg-primary-50/20 py-2.5 rounded-xl text-sm font-semibold text-slate-600 transition">20 題</button>
+                            <button type="button" data-limit="all" class="limit-btn border border-slate-200 hover:border-primary-500 hover:bg-primary-50/20 py-2.5 rounded-xl text-sm font-semibold text-slate-600 transition">全部</button>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- 選項設定 -->
+                    <div class="space-y-4">
+                        <label class="block text-sm font-bold text-slate-700 tracking-wide">3. 進階複習參數設定</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 選項 1: 題目打亂 -->
+                            <label class="flex items-start space-x-3 p-4 border border-slate-200 hover:border-slate-300 rounded-xl cursor-pointer bg-slate-50/50 transition">
+                                <input type="checkbox" id="setup-shuffle-questions" checked class="mt-1 h-4.5 w-4.5 rounded border-slate-300 text-primary-500 focus:ring-primary-500">
+                                <div>
+                                    <span class="block text-sm font-semibold text-slate-700">題目順序隨機化</span>
+                                    <span class="block text-xs text-slate-400 mt-0.5">打亂題目出現的順序，每次複習都有新鮮感。</span>
+                                </div>
+                            </label>
+                            <!-- 選項 2: 選項打亂 -->
+                            <label class="flex items-start space-x-3 p-4 border border-slate-200 hover:border-slate-300 rounded-xl cursor-pointer bg-slate-50/50 transition">
+                                <input type="checkbox" id="setup-shuffle-options" checked class="mt-1 h-4.5 w-4.5 rounded border-slate-300 text-primary-500 focus:ring-primary-500">
+                                <div>
+                                    <span class="block text-sm font-semibold text-slate-700">選項順序隨機打亂</span>
+                                    <span class="block text-xs text-slate-400 mt-0.5">將每個題目的選項隨機調換位置，防止死記順序！</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- 模式選擇 -->
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-slate-700 tracking-wide">4. 測驗模式</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 模式 A -->
+                            <label class="flex items-start space-x-3 p-4 border border-primary-500/30 bg-primary-50/10 rounded-xl cursor-pointer transition" id="label-mode-immediate">
+                                <input type="radio" name="setup-mode" id="setup-mode-immediate" value="immediate" checked class="mt-1 h-4.5 w-4.5 border-slate-300 text-primary-500 focus:ring-primary-500">
+                                <div>
+                                    <span class="block text-sm font-semibold text-slate-700">即時解析回饋模式 (推薦)</span>
+                                    <span class="block text-xs text-slate-400 mt-0.5">點選選項後，立刻顯示正確答案與詳盡解析，最適合日常複習吸收。</span>
+                                </div>
+                            </label>
+                            <!-- 模式 B -->
+                            <label class="flex items-start space-x-3 p-4 border border-slate-200 hover:border-slate-300 rounded-xl cursor-pointer bg-slate-50/50 transition" id="label-mode-exam">
+                                <input type="radio" name="setup-mode" id="setup-mode-exam" value="exam" class="mt-1 h-4.5 w-4.5 border-slate-300 text-primary-500 focus:ring-primary-500">
+                                <div>
+                                    <span class="block text-sm font-semibold text-slate-700">實戰模擬考模式</span>
+                                    <span class="block text-xs text-slate-400 mt-0.5">點選答案後直接切換下一題，全部考完才做成績結算與錯題檢討。</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 啟動按鈕 -->
+                    <div class="pt-4">
+                        <button id="start-quiz-btn" class="w-full bg-primary-500 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-primary-600 transform active:scale-[0.99] transition duration-150 text-base tracking-wider flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>開始挑戰複習</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 測驗進行中 VIEW -->
+        <section id="view-quiz-playing" class="view-section space-y-6 hidden">
+            <div class="max-w-2xl mx-auto">
+                <!-- 測驗進度與資訊 -->
+                <div class="flex items-center justify-between text-sm mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span id="quiz-category-badge" class="bg-primary-50 text-primary-500 px-3 py-1 rounded-full font-semibold text-xs border border-primary-100">歷史</span>
+                        <span id="quiz-time-tracker" class="text-slate-400 font-medium">時間 00:00</span>
+                    </div>
+                    <span id="quiz-progress-text" class="font-bold text-slate-600">第 1 / 10 題</span>
+                </div>
+
+                <!-- 頂部進度條 -->
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-6">
+                    <div id="quiz-progress-bar" class="h-full bg-primary-500 transition-all duration-300" style="width: 10%"></div>
+                </div>
+
+                <!-- 核心考題卡片 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden flex flex-col">
+
+                    <!-- 考題圖片顯示區（動態顯隱） -->
+                    <div id="quiz-image-container" class="bg-slate-50 border-b border-slate-100 p-4 flex justify-center items-center max-h-[320px] overflow-hidden hidden">
+                        <img id="quiz-question-image" src="" alt="考題圖片" class="max-h-[280px] max-w-full rounded-lg object-contain shadow-sm border border-slate-200">
+                    </div>
+
+                    <!-- 考題文字內容 -->
+                    <div class="p-6 md:p-8 space-y-6 flex-1">
+                        <h2 id="quiz-question-text" class="text-lg md:text-xl font-bold text-slate-800 leading-relaxed">
+                            題目文字加載中...
+                        </h2>
+
+                        <!-- 選項列表按鈕群 -->
+                        <div id="quiz-options-container" class="grid grid-cols-1 gap-3.5">
+                            <!-- 選項按鈕由 JS 動態生成 -->
+                        </div>
+
+                        <!-- 解析與回饋區域（即時模式點選後顯示，考試模式隱藏） -->
+                        <div id="quiz-feedback-box" class="mt-6 p-5 rounded-xl border hidden transition-all duration-300">
+                            <div class="flex items-center space-x-2 font-bold mb-2 text-base">
+                                <span id="feedback-icon-container"></span>
+                                <span id="feedback-status-text">回答正確！</span>
+                            </div>
+                            <div id="quiz-explanation-section" class="text-sm text-slate-600 space-y-1">
+                                <span class="font-bold text-slate-700 block">💡 知識解析：</span>
+                                <p id="quiz-explanation-text" class="leading-relaxed">本題的詳細知識點解析...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下一題 / 結算按鈕 -->
+                    <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <button id="quiz-quit-btn" class="text-slate-400 hover:text-slate-600 font-semibold text-sm transition">
+                            中途結束測驗
+                        </button>
+                        <button id="quiz-next-btn" disabled class="bg-primary-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-md hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 text-sm flex items-center space-x-1">
+                            <span id="quiz-next-btn-text">下一題</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 測驗結果與錯題檢討 VIEW -->
+        <section id="view-quiz-result" class="view-section space-y-6 hidden">
+            <div class="max-w-3xl mx-auto space-y-8">
+
+                <!-- 結果總覽卡片 -->
+                <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-md text-center space-y-6">
+                    <div class="inline-flex items-center justify-center relative">
+                        <!-- 圓形百分比環 -->
+                        <svg class="w-32 h-32 transform -rotate-90">
+                            <circle cx="64" cy="64" r="56" stroke="#f1f5f9" stroke-width="10" fill="transparent" />
+                            <circle cx="64" cy="64" r="56" stroke="#0284c7" stroke-width="10" fill="transparent" stroke-dasharray="351.8" id="result-score-circle" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="result-score-text" class="text-3xl font-extrabold text-slate-800">0%</span>
+                            <span class="text-xs text-slate-400 font-medium">測驗得分</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <h2 id="result-eval-title" class="text-xl md:text-2xl font-extrabold text-slate-800">表現得太棒了！</h2>
+                        <p id="result-eval-desc" class="text-slate-500 text-sm">這份成績展現了您平常紮實複習的成果，繼續保持下去！</p>
+                    </div>
+
+                    <!-- 答題數據小卡 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="block text-xs text-slate-400 font-medium mb-0.5">答題總數</span>
+                            <span id="result-stat-total" class="text-lg font-bold text-slate-700">10 題</span>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100/50">
+                            <span class="block text-xs text-emerald-500 font-medium mb-0.5">答對題數</span>
+                            <span id="result-stat-correct" class="text-lg font-bold text-emerald-600">8 題</span>
+                        </div>
+                        <div class="p-4 bg-red-50 rounded-xl border border-red-100/50">
+                            <span class="block text-xs text-red-500 font-medium mb-0.5">答錯題數</span>
+                            <span id="result-stat-incorrect" class="text-lg font-bold text-red-600">2 題</span>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="block text-xs text-slate-400 font-medium mb-0.5">花費時間</span>
+                            <span id="result-stat-time" class="text-lg font-bold text-slate-700">01:45</span>
+                        </div>
+                    </div>
+
+                    <!-- 底部返回按鈕 -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
+                        <button onclick="switchTab('quiz-setup')" class="w-full sm:w-auto bg-primary-500 text-white font-bold px-8 py-3 rounded-xl shadow-md hover:bg-primary-600 transition tracking-wider text-sm flex items-center justify-center space-x-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 15H19.5"></path></svg>
+                            <span>再挑戰一次</span>
+                        </button>
+                        <button onclick="switchTab('dashboard')" class="w-full sm:w-auto bg-white text-slate-700 border border-slate-200 font-semibold px-8 py-3 rounded-xl hover:bg-slate-50 transition text-sm">
+                            返回首頁主畫面
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 錯題檢討清單 -->
+                <div id="result-wrong-review-section" class="space-y-4">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                        <span class="w-2.5 h-6 bg-red-500 rounded-full block"></span>
+                        <span>🔍 錯題徹底檢討與複習</span>
+                    </h3>
+
+                    <div id="result-wrong-list" class="space-y-6">
+                        <!-- 錯題項目由 JS 動態生成 -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- 彈出視窗 1：新增 / 編輯考題 MODAL -->
+    <!-- ========================================== -->
+    <div id="question-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-all duration-300">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 opacity-0 transition-all duration-300" id="question-modal-card">
+            <!-- Modal 標題 -->
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="modal-title" class="text-xl font-bold text-slate-800">新增複習考題</h3>
+                <button id="modal-close-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal 內容 (可滾動) -->
+            <form id="question-form" class="flex-1 overflow-y-auto p-6 space-y-5">
+                <input type="hidden" id="form-q-id">
+
+                <!-- 分類與題目 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1 space-y-1.5">
+                        <label for="form-category" class="block text-xs font-bold text-slate-500 uppercase tracking-wider">考題分類</label>
+                        <input type="text" id="form-category" required placeholder="如：歷史、JavaScript" list="category-datalist" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm">
+                        <datalist id="category-datalist">
+                            <!-- JS 動態寫入已有分類 -->
+                        </datalist>
+                    </div>
+                    <div class="md:col-span-2 space-y-1.5">
+                        <label for="form-question-text" class="block text-xs font-bold text-slate-500 uppercase tracking-wider">題目敘述</label>
+                        <input type="text" id="form-question-text" required placeholder="請輸入您的考題題目..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm">
+                    </div>
+                </div>
+
+                <!-- 考題圖片上傳（核心需求） -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">考題輔助圖片（選填）</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 上傳區 -->
+                        <div id="image-drag-area" class="border-2 border-dashed border-slate-200 hover:border-primary-400 bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer flex flex-col items-center justify-center space-y-2 group transition">
+                            <svg class="w-8 h-8 text-slate-400 group-hover:text-primary-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path></svg>
+                            <div class="text-xs text-slate-500">
+                                <span class="text-primary-500 font-semibold">點擊上傳</span> 或拖曳圖片至此
+                            </div>
+                            <div class="text-[10px] text-slate-400">支援 JPG、PNG，上傳後在本地自動壓縮儲存</div>
+                            <input type="file" id="form-image-file" accept="image/*" class="hidden">
+                        </div>
+
+                        <!-- 預覽與網址區 -->
+                        <div class="flex flex-col justify-between space-y-3">
+                            <!-- 網址輸入 -->
+                            <div class="space-y-1">
+                                <label for="form-image-url" class="block text-[10px] font-bold text-slate-400">或使用外部圖片網址：</label>
+                                <input type="url" id="form-image-url" placeholder="https://example.com/image.jpg" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-primary-500 text-xs">
+                            </div>
+                            <!-- 即時預覽框 -->
+                            <div id="modal-image-preview-box" class="flex-1 border border-slate-100 bg-slate-50 rounded-xl p-2 relative flex items-center justify-center min-h-[90px] overflow-hidden">
+                                <span id="preview-placeholder" class="text-slate-400 text-xs">暫無圖片預覽</span>
+                                <img id="modal-image-preview" src="" alt="圖片預覽" class="max-h-[100px] rounded object-contain hidden">
+                                <button type="button" id="remove-preview-btn" class="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md hidden transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 動態選項設定（核心需求） -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">選項清單與設定正確答案</label>
+                        <span class="text-[10px] text-slate-400">請勾選左側單選鈕來設定「正確答案」</span>
+                    </div>
+
+                    <div id="modal-options-list" class="space-y-2.5">
+                        <!-- 動態選項由 JS 動態增減渲染 -->
+                    </div>
+
+                    <button type="button" id="form-add-option-btn" class="mt-2 text-primary-500 hover:text-primary-600 font-bold text-xs flex items-center space-x-1.5 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>新增選項欄位</span>
+                    </button>
+                </div>
+
+                <!-- 題目解析 -->
+                <div class="space-y-1.5">
+                    <label for="form-explanation" class="block text-xs font-bold text-slate-500 uppercase tracking-wider">題目解析 / 答案說明（選填）</label>
+                    <textarea id="form-explanation" rows="2.5" placeholder="請輸入回答這題考題時，可以顯示給使用者看的詳細知識點解析或解題思路..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm"></textarea>
+                </div>
+
+                <!-- 儲存/取消 -->
+                <div class="pt-3 border-t border-slate-100 flex justify-end space-x-3.5">
+                    <button type="button" id="modal-cancel-btn" class="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-sm transition">
+                        取消
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                        儲存考題
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 載入核心邏輯 JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

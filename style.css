@@ -1,0 +1,82 @@
+/* ==========================================================================
+   自訂樣式表 - 網頁智慧複習系統
+   ========================================================================== */
+
+/* 全域自訂滾動條 */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 導覽列選單 Active 狀態 */
+.active-tab {
+    background-color: #f0f9ff !important;
+    color: #0284c7 !important;
+    border-left: 4px solid #0284c7;
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0px !important;
+}
+
+/* 題數選擇 Active 狀態 */
+.active-limit {
+    border-color: #0284c7 !important;
+    background-color: #f0f9ff !important;
+    color: #0284c7 !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+/* 卡片切換與過渡動畫 */
+.view-section {
+    animation: fadeIn 0.35s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 圖片拖曳區拖入狀態 */
+#image-drag-area.dragover {
+    border-color: #0284c7 !important;
+    background-color: #f0f9ff !important;
+    transform: scale(1.01);
+}
+
+/* 微動態反饋 */
+.option-btn-anim {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.option-btn-anim:active {
+    transform: scale(0.98);
+}
+
+/* SVG 圓環計分條動畫 */
+#result-score-circle {
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 考題卡片 hover 特效 */
+.q-card-hover {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.q-card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+    border-color: #e2e8f0;
+}
