@@ -8,49 +8,511 @@
 const STORAGE_KEY = 'web_review_questions_db';
 const HISTORY_KEY = 'web_review_quiz_history';
 
-// 預設示範考題（含一個超精美內聯 SVG 圖片考題，100% 離線可用）
+// 預設考題：統計學第六章、第八章、第十章
 const DEFAULT_QUESTIONS = [
+
+    // =====================================================================
+    // 統計第六章：抽樣方法與抽樣分配
+    // =====================================================================
     {
-        id: 'q_demo_01',
-        category: '世界歷史',
-        questionText: '請問這張圖片中，位於印度阿格拉（Agra）的著名白色大理石歷史建築陵墓名稱為何？',
-        image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 240' width='100%' height='100%'><rect width='100%' height='100%' fill='%23f1f5f9'/><path d='M140 180h120v20H140zm10-70h100v70H150zm20-50h60v50h-60zm15-40c0-10 10-10 15-10s15 0 15 10z' fill='%2394a3b8'/><circle cx='200' cy='60' r='12' fill='%23cbd5e1'/><line x1='120' y1='180' x2='120' y2='80' stroke='%23cbd5e1' stroke-width='4'/><line x1='280' y1='180' x2='280' y2='80' stroke='%23cbd5e1' stroke-width='4'/><circle cx='120' cy='75' r='6' fill='%23cbd5e1'/><circle cx='280' cy='75' r='6' fill='%23cbd5e1'/><text x='200' y='220' font-family='sans-serif' font-size='14' font-weight='bold' fill='%23475569' text-anchor='middle'>世界文化遺產 - 著名建築</text></svg>",
-        options: [
-            { id: 'opt_0', text: '泰姬瑪哈陵 (Taj Mahal)' },
-            { id: 'opt_1', text: '帕德嫩神廟 (Parthenon)' },
-            { id: 'opt_2', text: '羅馬競技場 (Colosseum)' },
-            { id: 'opt_3', text: '吳哥窟 (Angkor Wat)' }
-        ],
-        correctOptionId: 'opt_0',
-        explanation: '泰姬瑪哈陵是莫臥兒帝國皇帝沙賈漢為紀念其已故愛妃姬蔓·芭奴而興建的陵墓，融合了波斯、伊斯蘭及印度建築風格，是世界文化遺產，被譽為印度最璀璨的明珠。'
-    },
-    {
-        id: 'q_demo_02',
-        category: 'JavaScript 程式設計',
-        questionText: '下列何者「不是」 JavaScript 中的基本型別 (Primitive Types)？',
+        id: 'q_ch6_01',
+        category: '統計第六章',
+        questionText: '下列哪一個不是隨機樣本的必要條件？',
         image: null,
         options: [
-            { id: 'opt_0', text: 'String (字串)' },
-            { id: 'opt_1', text: 'Number (數字)' },
-            { id: 'opt_2', text: 'Object (物件)' },
-            { id: 'opt_3', text: 'Undefined (未定義)' }
+            { id: 'opt_a', text: 'A. 樣本要抽自相同母體' },
+            { id: 'opt_b', text: 'B. 樣本間要相互獨立' },
+            { id: 'opt_c', text: 'C. 要採隨機抽樣進行抽樣' },
+            { id: 'opt_d', text: 'D. 母體一定要常態母體' }
         ],
-        correctOptionId: 'opt_2',
-        explanation: 'JavaScript 中的基本型別包括：String, Number, BigInt, Boolean, Undefined, Symbol, 與 Null。而 Object (例如物件、陣列、函數) 則屬於「引用型別 (Reference Type)」。'
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】\n隨機抽樣的三個必要條件：\n①樣本來自同一母體\n②樣本彼此獨立（每次抽樣不影響下次）\n③採用隨機／機率方式抽樣\n\n母體是否為常態分配，只影響樣本平均數的抽樣分配形狀，並非隨機樣本的必要條件。即使母體非常態，只要樣本數夠大（中央極限定理），樣本平均數仍會近似常態分配。'
     },
     {
-        id: 'q_demo_03',
-        category: '地理與自然',
-        questionText: '地球上最深的天然海溝「馬里亞納海溝」，其最深處（挑戰者深淵）大約位於哪一個大洋？',
+        id: 'q_ch6_02',
+        category: '統計第六章',
+        questionText: '高雄市政府想要瞭解市民對防治登革熱績效的看法，根據統計高雄市現有 38 個區共 891 個里，隨機由 38 個區中隨機各抽取 3 個里，共 114 個里進行普查，試問這是何種抽樣方法？',
         image: null,
         options: [
-            { id: 'opt_0', text: '大西洋' },
-            { id: 'opt_1', text: '太平洋' },
-            { id: 'opt_2', text: '印度洋' },
-            { id: 'opt_3', text: '北冰洋' }
+            { id: 'opt_a', text: 'A. 簡單隨機抽樣' },
+            { id: 'opt_b', text: 'B. 分層抽樣' },
+            { id: 'opt_c', text: 'C. 系統抽樣' },
+            { id: 'opt_d', text: 'D. 集群抽樣' }
         ],
-        correctOptionId: 'opt_1',
-        explanation: '馬里亞納海溝位於北太平洋西部海床，其最深處挑戰者深淵深度近 11,000 公尺，是目前已知的海洋最深處。'
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】集群抽樣（Cluster Sampling）\n\n步驟說明：\n①先將母體分成若干「群（cluster）」→ 38 個區\n②從群中隨機抽取幾群 → 各區隨機抽 3 個里\n③對抽中的群進行普查 → 114 個里全部普查\n\n與分層抽樣的區別：分層抽樣是在每層中抽取部分個體；集群抽樣則是抽取整個群後對群內全部成員普查。'
+    },
+    {
+        id: 'q_ch6_03',
+        category: '統計第六章',
+        questionText: '教育部對某五專觀光學系進行系所評鑑，須訪談該系的學生，該系共有 250 位同學，評鑑委員欲抽取 10 位同學進行訪談，請系上助理將同學由 1 號編到 250 號，並以 25 位同學為一組，共分為 A～J 等 10 組，評鑑委員由 A 組隨機抽取一個號碼後，請系上助理將此號碼依序加上 25 後，抽取訪談同學的編號，試問這是何種抽樣方法？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 簡單隨機抽樣' },
+            { id: 'opt_b', text: 'B. 分層抽樣' },
+            { id: 'opt_c', text: 'C. 系統抽樣' },
+            { id: 'opt_d', text: 'D. 集群抽樣' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】系統抽樣（Systematic Sampling）\n\n步驟說明：\n①將 250 人編號 1～250\n②計算抽樣間距 k = 250 ÷ 10 = 25\n③在第一組（1～25）中隨機抽取一個起始號碼\n④之後每隔 25 號抽取一位，共抽 10 人\n\n特徵：「先編號，每隔 k 個抽 1 位」即為系統抽樣的標誌。'
+    },
+    {
+        id: 'q_ch6_04',
+        category: '統計第六章',
+        questionText: '某校欲瞭解大學生對「反送中」的看法，在校園看到同學就問，試問這是何種抽樣方法？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 便利抽樣' },
+            { id: 'opt_b', text: 'B. 立意抽樣' },
+            { id: 'opt_c', text: 'C. 配額抽樣' },
+            { id: 'opt_d', text: 'D. 滾雪球抽樣' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】便利抽樣（Convenience Sampling）\n\n說明：依照便利性（看到同學就問）進行抽樣，屬於非機率抽樣方法，樣本代表性較低。\n\n各非機率抽樣比較：\n• 便利抽樣：依方便性取樣，最省時省力\n• 立意抽樣：研究者依判斷選取具代表性的對象\n• 配額抽樣：依母體特徵比例設定配額後取樣\n• 滾雪球抽樣：由受訪者介紹其他受訪者，適合特殊族群'
+    },
+    {
+        id: 'q_ch6_05',
+        category: '統計第六章',
+        questionText: '抽樣分配指的是哪一個數的機率分配？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 母體平均數' },
+            { id: 'opt_b', text: 'B. 樣本平均數' },
+            { id: 'opt_c', text: 'C. 母體變異數' },
+            { id: 'opt_d', text: 'D. 母體比例' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n\n抽樣分配（Sampling Distribution）是統計量（Statistic）的機率分配。\n\n統計量是由母體中抽出之隨機樣本所計算出的數值（如樣本平均數 X̄、樣本比例 p̂ 等）。\n\n母體參數（μ、σ²、P）是固定的常數，不是隨機變數，因此沒有機率分配。\n只有統計量（如樣本平均數 X̄）會因每次抽取的樣本不同而改變，才具有抽樣分配。'
+    },
+    {
+        id: 'q_ch6_06',
+        category: '統計第六章',
+        questionText: '依據中央極限定理，當下列哪一個條件成立時，任何統計量的機率分配都會近似常態分配？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 樣本數夠大' },
+            { id: 'opt_b', text: 'B. 樣本平均數夠大' },
+            { id: 'opt_c', text: 'C. 樣本標準差夠大' },
+            { id: 'opt_d', text: 'D. 樣本變異數夠大' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n\n中央極限定理（Central Limit Theorem）：\n無論母體分配的形狀為何，當樣本數 n 越大（通常 n ≥ 30），樣本平均數 X̄ 的抽樣分配會趨近於常態分配。\n\n公式：X̄ ~ N(μ, σ²/n)\n\n關鍵：是「樣本數夠大」，而非樣本平均數、標準差或變異數夠大。'
+    },
+    {
+        id: 'q_ch6_07_1',
+        category: '統計第六章',
+        questionText: '【民宿題組 (1)】一優質民宿內有四間不同等級的房間，房價分別為1,000、2,000、2,000 與 4,000 元，每天提供兩間出租，令 X 表示今年暑假出租房間的房價，令 X̄ = (X₁ + X₂)/2 表每天每間房間的平均價格。\n\n試求 X̄ 抽樣分配中，①（X̄ = 1500 時的機率分子）對應的 X̄ 值為何？\n\n（提示：四間房 ABCD，A=1000、B=2000、C=2000、D=4000，每次出租兩間）',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 1000' },
+            { id: 'opt_b', text: 'B. 1500' },
+            { id: 'opt_c', text: 'C. 2000' },
+            { id: 'opt_d', text: 'D. 4000' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】X̄ = 1500\n\n每天出租兩間，所有可能組合（C(4,2)=6種）：\n• AB：(1000+2000)/2 = 1500　→ f(x̄) = 2/6（AB、AC）\n• AC：(1000+2000)/2 = 1500\n• AD：(1000+4000)/2 = 2500　→ f(x̄) = 1/6\n• BC：(2000+2000)/2 = 2000　→ f(x̄) = 1/6\n• BD：(2000+4000)/2 = 3000　→ f(x̄) = 2/6（BD、CD）\n• CD：(2000+4000)/2 = 3000\n\n抽樣分配表：\nx̄ = 1500：f(x̄) = 2/6\nx̄ = 2000（此題①）：f(x̄) 見下題\nx̄ = 2500：f(x̄) = 1/6\nx̄ = 3000：f(x̄) = 2/6\n\n①所填的 x̄ 值為 1500（第一欄位）'
+    },
+    {
+        id: 'q_ch6_07_2',
+        category: '統計第六章',
+        questionText: '【民宿題組 (2)】承上題，抽樣分配表中②（x̄ = 2000 欄位的機率分子）為何？\n\n（x̄ = 2500 的 f(x̄) = 1/6 已知）',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 1000' },
+            { id: 'opt_b', text: 'B. 1500' },
+            { id: 'opt_c', text: 'C. 2000' },
+            { id: 'opt_d', text: 'D. 4000' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】X̄ = 2000\n\n六種組合分析：\n• AB → (1000+2000)/2 = 1500\n• AC → (1000+2000)/2 = 1500\n• AD → (1000+4000)/2 = 2500 ✓（題目已知 f=1/6）\n• BC → (2000+2000)/2 = 2000 ✓\n• BD → (2000+4000)/2 = 3000\n• CD → (2000+4000)/2 = 3000\n\n②的 x̄ 值（第二欄位）= 2000\nf(2000) = 1/6（只有 BC 這一種組合）'
+    },
+    {
+        id: 'q_ch6_07_3',
+        category: '統計第六章',
+        questionText: '【民宿題組 (3)】承上題，抽樣分配表中③（x̄ = 2500 的機率）為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 1/6' },
+            { id: 'opt_b', text: 'B. 2/6' },
+            { id: 'opt_c', text: 'C. 3/6' },
+            { id: 'opt_d', text: 'D. 4/6' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】f(2500) = 1/6\n\n六種組合中，x̄ = 2500 只有一種：\n• AD：(1000+4000)/2 = 2500\n\n因此 f(2500) = 1/6\n\n完整抽樣分配：\n• f(1500) = 2/6（AB、AC）\n• f(2000) = 1/6（BC）\n• f(2500) = 1/6（AD）\n• f(3000) = 2/6（BD、CD）\n• 合計 = 6/6 = 1 ✓'
+    },
+    {
+        id: 'q_ch6_07_4',
+        category: '統計第六章',
+        questionText: '【民宿題組 (4)】承上題，抽樣分配表中④（合計欄位的 f(x̄) 值）為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. -1' },
+            { id: 'opt_b', text: 'B. 0' },
+            { id: 'opt_c', text: 'C. 1' },
+            { id: 'opt_d', text: 'D. 2' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】合計 = 1\n\n機率分配的基本性質：所有可能值的機率總和必須等於 1。\n\n驗算：\n2/6 + 1/6 + 1/6 + 2/6 = 6/6 = 1 ✓\n\n因此 ④ = 1'
+    },
+
+    // =====================================================================
+    // 統計第八章：假設檢定
+    // =====================================================================
+    {
+        id: 'q_ch8_01',
+        category: '統計第八章',
+        questionText: '考慮檢定的假設為 H₀: μ ≤ 21　H₁: μ ≥ 21，此檢定類型為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 左尾檢定' },
+            { id: 'opt_b', text: 'B. 右尾檢定' },
+            { id: 'opt_c', text: 'C. 雙尾檢定' },
+            { id: 'opt_d', text: 'D. 以上皆是' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】右尾檢定\n\n判斷方法（看 H₁ 的符號）：\n• H₁ 含「<」→ 左尾檢定（拒絕域在左方）\n• H₁ 含「>」→ 右尾檢定（拒絕域在右方）\n• H₁ 含「≠」→ 雙尾檢定（拒絕域在兩側）\n\n本題 H₁: μ ≥ 21，等同於 H₁: μ > 21，拒絕域落在右尾，故為右尾檢定。'
+    },
+    {
+        id: 'q_ch8_02',
+        category: '統計第八章',
+        questionText: '考慮檢定的假設為 H₀: μ = 21　H₁: μ ≠ 21，則拒絕域應該是下列哪個圖形（兩側都有陰影區域）？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 左尾單側（左側陰影）' },
+            { id: 'opt_b', text: 'B. 右尾單側（右側陰影）' },
+            { id: 'opt_c', text: 'C. 雙尾（兩側皆有陰影）' },
+            { id: 'opt_d', text: 'D. 以上皆是' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】雙尾檢定 → 拒絕域在兩側\n\nH₁: μ ≠ 21 表示「μ 不等於 21」，即 μ 可能大於或小於 21，因此拒絕域分布在常態分配的兩側尾部。\n\n顯著水準 α 平分為兩側，各為 α/2。\n例如 α = 0.05 時，拒絕域為 |Z| ≥ Z₀.₀₂₅ = 1.96'
+    },
+    {
+        id: 'q_ch8_03',
+        category: '統計第八章',
+        questionText: '考慮檢定的假設為 H₀: μ ≤ 21　H₁: μ ≥ 21，如果母體的平均數 μ = 23，則可能會發生哪一種誤差？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 型 I 誤差' },
+            { id: 'opt_b', text: 'B. 型 II 誤差' },
+            { id: 'opt_c', text: 'C. 型 I 與型 II 誤差都會發生' },
+            { id: 'opt_d', text: 'D. 型 I 與型 II 誤差都不會發生' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】型 II 誤差\n\n分析：μ = 23 > 21，代表 H₀（μ ≤ 21）實際上是「錯的」。\n\n決策矩陣：\n　　　　　　　H₀真實狀況\n　　　　　H₀對　　H₀錯\n拒絕H₀　型I誤差　正確決策\n不拒絕H₀　正確　　型II誤差\n\n當 H₀ 是錯的：\n• 拒絕 H₀ → 正確決策\n• 不拒絕 H₀ → 型 II 誤差（漏判）\n\n因此可能發生型 II 誤差（無法發生型 I 誤差，因為型 I 誤差前提是 H₀ 為真）。'
+    },
+    {
+        id: 'q_ch8_04',
+        category: '統計第八章',
+        questionText: '下列對型 I 誤差的描述，何者正確？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 接受了錯的虛無假設 H₀' },
+            { id: 'opt_b', text: 'B. 拒絕了對的虛無假設 H₀' },
+            { id: 'opt_c', text: 'C. 接受了對的虛無假設 H₀' },
+            { id: 'opt_d', text: 'D. 拒絕了錯的虛無假設 H₀' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】拒絕了對的虛無假設 H₀\n\n型 I 誤差（Type I Error / α 誤差）：\n→ H₀ 實際上是「對的」，但統計決策卻「拒絕 H₀」\n→ 又稱「棄真誤差」（冤枉了無辜者）\n→ 發生機率 = 顯著水準 α\n\n型 II 誤差（Type II Error / β 誤差）：\n→ H₀ 實際上是「錯的」，但統計決策卻「不拒絕 H₀」\n→ 又稱「取偽誤差」（放走了罪犯）\n→ 發生機率 = β'
+    },
+    {
+        id: 'q_ch8_05',
+        category: '統計第八章',
+        questionText: '如果一假設檢定的統計決策為拒絕虛無假設，則這個決策會？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 犯型 I 誤差' },
+            { id: 'opt_b', text: 'B. 犯型 II 誤差' },
+            { id: 'opt_c', text: 'C. 同時犯型 I 與型 II 誤差' },
+            { id: 'opt_d', text: 'D. 都不會犯錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】可能犯型 I 誤差\n\n當統計決策為「拒絕 H₀」時：\n• H₀ 是對的，卻拒絕 H₀ → 型 I 誤差（可能發生）\n• H₀ 是錯的，拒絕 H₀ → 正確決策（也可能是此情況）\n\n注意：「拒絕 H₀」這個決策只可能犯型 I 誤差，不可能犯型 II 誤差（型 II 誤差只在「不拒絕 H₀」時才可能發生）。'
+    },
+    {
+        id: 'q_ch8_06',
+        category: '統計第八章',
+        questionText: '中央氣象局於 2019 年 7 月 17 日早上 11:30 發布丹娜絲颱風的陸上颱風警報，對於是否要不要放颱風假經常是困擾各縣市市長的問題，有一假設如下：\n\nH₀：放颱風假　vs.　H₁：不放颱風假\n\n試問「該放假而沒放假」會犯何種錯誤？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 型 I 誤差' },
+            { id: 'opt_b', text: 'B. 型 II 誤差' },
+            { id: 'opt_c', text: 'C. 同時犯型 I 與型 II 誤差' },
+            { id: 'opt_d', text: 'D. 都不會犯錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】型 I 誤差\n\n情境分析：\n• H₀：放颱風假（代表「該放假」是正確的）\n• 「該放假而沒放假」= H₀ 是對的，但決策是「不放假」= 拒絕 H₀\n\n對照決策矩陣：\n→ H₀ 是對的 + 拒絕 H₀ = 型 I 誤差\n\n生活化理解：颱風確實很強（該放假），但市長決定不放假 → 冤枉了正確假設 → 型 I 誤差（棄真）'
+    },
+    {
+        id: 'q_ch8_07_1',
+        category: '統計第八章',
+        questionText: '【旅客停留天數題組 (1)】根據統計資料指出，2019 年來台旅客平均停留 6.39 天。為瞭解 2020 年是否有改變，在機場隨機抽取 144 位旅客，得平均停留天數 6.1 天，標準差 1.2 天（α = 0.05）。\n\n建立假設：H₀: μ = ①，H₁: μ ≠ ②\n\n請問 ① 與 ② 各為多少？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ① = 6.1，② = 6.1' },
+            { id: 'opt_b', text: 'B. ① = 6.39，② = 6.1' },
+            { id: 'opt_c', text: 'C. ① = 6.39，② = 6.39' },
+            { id: 'opt_d', text: 'D. ① = 6.1，② = 6.39' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】① = 6.39，② = 6.39\n\n假設建立原則：\n• H₀（虛無假設）：假設現狀不變，即 2020 年平均停留天數與 2019 年相同 → μ = 6.39\n• H₁（對立假設）：假設有改變（雙尾）→ μ ≠ 6.39\n\n注意：虛無假設使用歷史數據（6.39），而非樣本數據（6.1）。樣本數據是用來計算檢定統計量的，不能填入假設中。'
+    },
+    {
+        id: 'q_ch8_07_2',
+        category: '統計第八章',
+        questionText: '【旅客停留天數題組 (2)】承上題，計算 Z 檢定統計量：\n\nZ = (X̄ - μ₀) / (S/√n) = (6.1 - ①) / (1.2/√144) = ②\n\n請問 ① = ? ② = ?',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ① = 6.1，② = 2.9' },
+            { id: 'opt_b', text: 'B. ① = 6.39，② = 2.9' },
+            { id: 'opt_c', text: 'C. ① = 6.39，② = -2.9' },
+            { id: 'opt_d', text: 'D. ① = 6.1，② = -2.9' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】① = 6.39，② = -2.9\n\n計算過程：\nn = 144，X̄ = 6.1，S = 1.2，μ₀ = 6.39\n\nZ = (6.1 - 6.39) / (1.2/√144)\n  = -0.29 / (1.2/12)\n  = -0.29 / 0.1\n  = -2.9\n\n① 填入的是 H₀ 的參數值 μ₀ = 6.39\n② 計算結果 Z = -2.9\n\n|Z| = |-2.9| = 2.9 ≥ 1.96（Z₀.₀₂₅），落入拒絕域。'
+    },
+    {
+        id: 'q_ch8_07_3',
+        category: '統計第八章',
+        questionText: '【旅客停留天數題組 (3)】承上題，雙尾檢定拒絕域為 R = {|Z| ≥ Z₀.₀₂₅ = 1.96}，計算得 Z = -2.9，統計決策為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. Reject H₀（拒絕虛無假設）' },
+            { id: 'opt_b', text: 'B. Do Not Reject H₀（不拒絕虛無假設）' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】Reject H₀\n\n判斷依據：\n|Z| = |-2.9| = 2.9 ≥ 1.96\n→ 檢定統計量落入拒絕域\n→ 統計決策：Reject H₀\n\n注意：我們比較的是 |Z| 的絕對值與臨界值 1.96，因為雙尾檢定兩側都是拒絕域。'
+    },
+    {
+        id: 'q_ch8_07_4',
+        category: '統計第八章',
+        questionText: '【旅客停留天數題組 (4)】承上題，在顯著水準 α = 0.05 下，根據樣本資料，今年來台旅客在台平均停留天數與去年____顯著差異。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 存在' },
+            { id: 'opt_b', text: 'B. 不存在' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】存在顯著差異\n\n結論撰寫格式：\n在顯著水準 α = 0.05 下，根據樣本資料，我們有充分的證據來證明，今年來台旅客在台平均停留天數與去年「存在」顯著差異。\n\n邏輯：因為 Reject H₀（H₀ 表示無差異），所以結論是「有差異存在」。\n\n記憶技巧：\n• 拒絕 H₀ → 支持 H₁ → H₁ 說有差異 → 結論：有差異\n• 不拒絕 H₀ → H₀ 說無差異 → 結論：無差異（或證據不足）'
+    },
+
+    // =====================================================================
+    // 統計第十章：卡方檢定
+    // =====================================================================
+    {
+        id: 'q_ch10_01',
+        category: '統計第十章',
+        questionText: '有一位心理醫師要研究「不同性別（男、女）與是否有睡眠困擾（有、沒有）之間的關係」，請問他要採用何種統計方法？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 卡方檢定' },
+            { id: 'opt_b', text: 'B. 變異數分析' },
+            { id: 'opt_c', text: 'C. 迴歸分析' },
+            { id: 'opt_d', text: 'D. 以上皆可' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】卡方檢定（獨立性檢定）\n\n判斷方法：\n• 性別（男/女）→ 類別變數\n• 睡眠困擾（有/沒有）→ 類別變數\n\n兩個類別變數間的關係 → 卡方獨立性檢定（Chi-Square Test of Independence）\n\n統計方法選擇口訣：\n• 兩類別變數關係 → 卡方獨立性檢定\n• 類別 vs 數值 → 變異數分析（ANOVA）\n• 兩數值變數關係 → 迴歸分析或相關分析'
+    },
+    {
+        id: 'q_ch10_02',
+        category: '統計第十章',
+        questionText: '有一位米其林餐廳的管理階層想要知道「消費者的消費金額（元）與職業是否有關係」，請問他要採用何種統計方法？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 卡方檢定' },
+            { id: 'opt_b', text: 'B. 變異數分析' },
+            { id: 'opt_c', text: 'C. 迴歸分析' },
+            { id: 'opt_d', text: 'D. 以上皆可' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】變異數分析（ANOVA）\n\n判斷方法：\n• 消費金額（元）→ 連續數值變數\n• 職業 → 類別變數（多個組別）\n\n一個數值變數 + 一個多組類別變數 → 單因子變異數分析（One-Way ANOVA）\n\n目的：檢定不同職業群體的平均消費金額是否有顯著差異。'
+    },
+    {
+        id: 'q_ch10_03',
+        category: '統計第十章',
+        questionText: '卡方檢定屬於何種類型的檢定？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 左尾檢定' },
+            { id: 'opt_b', text: 'B. 右尾檢定' },
+            { id: 'opt_c', text: 'C. 雙尾檢定' },
+            { id: 'opt_d', text: 'D. 以上皆可' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】右尾檢定\n\n原因：\n卡方統計量 χ² = Σ[(O - E)² / E]，因為分子是平方，χ² 值恆為非負數（≥ 0）。\n\n• 當觀察值與期望值差異越大 → χ² 越大 → 拒絕 H₀\n• 因此拒絕域永遠在右尾（χ² 值越大越可疑）\n\n卡方分配的特性：不對稱，偏右，只有右尾拒絕域。'
+    },
+    {
+        id: 'q_ch10_04',
+        category: '統計第十章',
+        questionText: '適合度檢定要檢定的參數為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 平均數' },
+            { id: 'opt_b', text: 'B. 變異數' },
+            { id: 'opt_c', text: 'C. 標準差' },
+            { id: 'opt_d', text: 'D. 比例' }
+        ],
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】比例\n\n適合度檢定（Goodness-of-Fit Test）：\n→ 檢定各類別的觀察次數分配是否符合某個理論機率分配\n→ 本質上是在檢定各類別的「比例（機率）」\n\n例如：檢定骰子是否公平 → H₀: P₁ = P₂ = ... = P₆ = 1/6\n\n與獨立性檢定的區別：\n• 適合度檢定：一個類別變數 vs 理論分配\n• 獨立性檢定：兩個類別變數之間的關聯性'
+    },
+    {
+        id: 'q_ch10_05',
+        category: '統計第十章',
+        questionText: '何種類型的資料可以使用卡方檢定來進行分析？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 類別資料' },
+            { id: 'opt_b', text: 'B. 連續資料' },
+            { id: 'opt_c', text: 'C. 離散資料' },
+            { id: 'opt_d', text: 'D. 以上均可' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】類別資料\n\n卡方檢定專門用於分析「類別資料（Categorical Data）」的次數分配。\n\n適用情境：\n• 適合度檢定：單一類別變數的分配是否符合理論\n• 獨立性檢定：兩個類別變數是否相互獨立\n\n注意：若資料是連續或離散的數值資料，需先分組轉換為類別資料，才能使用卡方檢定。'
+    },
+    {
+        id: 'q_ch10_06',
+        category: '統計第十章',
+        questionText: '卡方檢定中，每個格子內的期望次數至少要多少以上才是有效的檢定？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 2' },
+            { id: 'opt_b', text: 'B. 3' },
+            { id: 'opt_c', text: 'C. 4' },
+            { id: 'opt_d', text: 'D. 5' }
+        ],
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】每格期望次數 ≥ 5\n\n卡方檢定的基本假設：每個格子（cell）的期望次數（Expected Count）必須 ≥ 5。\n\n若不滿足此條件：\n• 卡方近似效果差\n• 需合併相鄰類別，或改用 Fisher精確檢定（Fisher\'s Exact Test）\n\n期望次數計算公式：\nE = （該列合計 × 該行合計）/ 總合計'
+    },
+    {
+        id: 'q_ch10_07_1',
+        category: '統計第十章',
+        questionText: '【台北通勤題組 (1)】為了解台北市市民每天通勤交通工具的分配狀況，調查 1,200 個樣本，得：捷運 512、公車 99、計程車 43、機車 292、自用小客車 215、其他 39。\n\n若要檢定市民通勤交通工具是否有差異，每個格子應該發生的機率為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 1/3' },
+            { id: 'opt_b', text: 'B. 1/4' },
+            { id: 'opt_c', text: 'C. 1/5' },
+            { id: 'opt_d', text: 'D. 1/6' }
+        ],
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】1/6\n\n在「無差異」的虛無假設下，每種交通工具被選擇的機率應相等。\n\n共有 6 種交通工具（捷運、公車、計程車、機車、自用小客車、其他）\n\n→ H₀: P₁ = P₂ = P₃ = P₄ = P₅ = P₆ = 1/6\n\n這是適合度檢定的基本設定。'
+    },
+    {
+        id: 'q_ch10_07_2',
+        category: '統計第十章',
+        questionText: '【台北通勤題組 (2)】承上題，若要檢定市民通勤交通工具是否有差異，每個格子應發生的期望次數為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 100' },
+            { id: 'opt_b', text: 'B. 200' },
+            { id: 'opt_c', text: 'C. 300' },
+            { id: 'opt_d', text: 'D. 400' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】每格期望次數 = 200\n\n計算公式：期望次數 = 理論機率 × 總樣本數\n\nE = (1/6) × 1200 = 200\n\n驗算：6 格 × 200 = 1200（等於總樣本數）✓'
+    },
+    {
+        id: 'q_ch10_07_3',
+        category: '統計第十章',
+        questionText: '【台北通勤題組 (3)】承上題，若要檢定市民通勤交通工具是否有差異，則檢定的自由度為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 3' },
+            { id: 'opt_b', text: 'B. 4' },
+            { id: 'opt_c', text: 'C. 5' },
+            { id: 'opt_d', text: 'D. 6' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】自由度 = 5\n\n適合度檢定自由度公式：df = k - 1（k = 類別數）\n\ndf = 6 - 1 = 5\n\n記憶方式：有 6 格，知道前 5 格的數量，最後 1 格就自動決定了（因為總和固定），所以自由度 = 6 - 1 = 5。'
+    },
+    {
+        id: 'q_ch10_08',
+        category: '統計第十章',
+        questionText: '一獨立性檢定的列聯表中共有 3 列 4 行，試問其自由度為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 3' },
+            { id: 'opt_b', text: 'B. 6' },
+            { id: 'opt_c', text: 'C. 9' },
+            { id: 'opt_d', text: 'D. 12' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】自由度 = 6\n\n獨立性檢定自由度公式：df = (r-1)(c-1)\n其中 r = 列數（rows），c = 行數（columns）\n\ndf = (3-1)(4-1) = 2 × 3 = 6\n\n與適合度檢定自由度的區別：\n• 適合度檢定：df = k - 1\n• 獨立性檢定：df = (r-1)(c-1)'
+    },
+    {
+        id: 'q_ch10_09_1',
+        category: '統計第十章',
+        questionText: '【觀光局旅客目的題組 (1)】觀光局指出外國旅客來台目的比例為觀光:商務:探親 = 8:1:1。在機場對 1,000 位旅客調查，觀察次數：觀光 780、業務 120、探視 100；期望次數：觀光 800、業務 100、探視 100。（α = 0.05）\n\n建立假設，自由度 df = ?',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 1' },
+            { id: 'opt_b', text: 'B. 2' },
+            { id: 'opt_c', text: 'C. 3' },
+            { id: 'opt_d', text: 'D. 9' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】df = 2\n\n假設設定：\nH₀: P₁ = 0.8, P₂ = 0.1, P₃ = 0.1（符合 8:1:1）\nH₁: H₀ 為錯\n顯著水準 α = 0.05\n\n自由度計算（適合度檢定）：\ndf = k - 1 = 3 - 1 = 2（共 3 種目的類別）\n\n拒絕域：R = {χ² ≥ χ²₀.₀₅(2) = 5.991}'
+    },
+    {
+        id: 'q_ch10_09_2',
+        category: '統計第十章',
+        questionText: '【觀光局旅客目的題組 (2)】承上題，χ² = 4.5，小於臨界值 5.991，統計決策為？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. Reject H₀（拒絕虛無假設）' },
+            { id: 'opt_b', text: 'B. Do Not Reject H₀（不拒絕虛無假設）' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】Do Not Reject H₀\n\n判斷：\nχ² = 4.5 < χ²₀.₀₅(2) = 5.991\n→ 未落入拒絕域\n→ 統計決策：Do Not Reject H₀\n\n結論：在顯著水準 α = 0.05 下，顯示歷年探親比例很可能就是 8:1:1，代表觀光局的說法很可能是對的。（○）'
+    },
+    {
+        id: 'q_ch10_09_3',
+        category: '統計第十章',
+        questionText: '【觀光局旅客目的題組 (4)】承上題，在顯著水準 α = 0.05 下，根據結果，結論為下列何者正確？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○（顯示歷年探親比例很可能就是 8:1:1，觀光局說法很可能是對的）' },
+            { id: 'opt_b', text: 'B. ✗（有足夠證據推翻觀光局說法）' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】○\n\n邏輯推演：\n• 統計決策：Do Not Reject H₀\n• H₀ 代表：旅客目的比例符合 8:1:1\n• 不拒絕 H₀ → 沒有足夠證據推翻 8:1:1 的說法\n• 結論：觀光局的說法很可能是對的 ✓\n\n注意：「不拒絕 H₀」不等於「H₀ 一定正確」，只是「證據不足以推翻 H₀」。'
+    },
+    {
+        id: 'q_ch10_10_1',
+        category: '統計第十章',
+        questionText: '【反送中學歷題組 (1)】2019 年進行 1,000 位樣本的民意調查（學歷 vs 對反送中的看法）：\n高中以下：贊成 140、反對 60（合計 200）\n大專大學：贊成 460、反對 40（合計 500）\n研究所以上：贊成 250、反對 50（合計 300）\n\n拒絕域為 R = {χ² ≥ χ²₀.₀₅(df) = 5.991}，df（自由度）= ？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 1' },
+            { id: 'opt_b', text: 'B. 2' },
+            { id: 'opt_c', text: 'C. 5' },
+            { id: 'opt_d', text: 'D. 6' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】df = 2\n\n此為獨立性檢定（兩個類別變數：學歷 × 看法）\n\n列聯表大小：3 列（高中以下、大專大學、研究所以上）× 2 行（贊成、反對）\n\ndf = (r-1)(c-1) = (3-1)(2-1) = 2 × 1 = 2\n\n拒絕域：R = {χ² ≥ χ²₀.₀₅(2) = 5.991}'
+    },
+    {
+        id: 'q_ch10_10_2',
+        category: '統計第十章',
+        questionText: '【反送中學歷題組 (2)】承上題，χ² = 55.1634，大於臨界值 5.991，統計決策為？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. Do Not Reject H₀（不拒絕虛無假設）' },
+            { id: 'opt_b', text: 'B. Reject H₀（拒絕虛無假設）' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】Reject H₀\n\n判斷：\nχ² = 55.1634 > χ²₀.₀₅(2) = 5.991\n→ 落入拒絕域\n→ 統計決策：Reject H₀\n\n這個 χ² 值非常大（遠超臨界值），表示觀察值與期望值差異極為顯著。'
+    },
+    {
+        id: 'q_ch10_10_3',
+        category: '統計第十章',
+        questionText: '【反送中學歷題組 (3)】承上題，Reject H₀，結論為「民眾對反送中的看法，跟學歷____」，下列何者正確？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○（跟學歷有關）' },
+            { id: 'opt_b', text: 'B. ✗（跟學歷無關）' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】✗ ← 題目結論敘述有誤！\n\n重要澄清：\n• H₀：民眾對反送中的看法跟學歷「無關」\n• H₁：民眾對反送中的看法跟學歷「有關」\n• 統計決策：Reject H₀\n• → 正確結論應該是：跟學歷「有關」\n\n本題考的是：題目中給出的結論敘述「跟學歷無關」是對（○）還是錯（✗）？\n→ 因為我們拒絕 H₀，代表「有關」，所以「無關」的敘述是錯的 → 答案選 B（✗）'
     }
 ];
 
@@ -1330,3 +1792,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
