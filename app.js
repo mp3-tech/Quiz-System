@@ -660,9 +660,41 @@ class QuizEngine {
             return false;
         }
 
-        // 2. 題目隨機排序
+        // 2. 題目隨機排序（題組整體可打亂，但題組內順序固定）
         if (shuffleQs) {
-            this.activeQuestions = this.shuffleArray(filtered);
+            // 2a. 分類：獨立題 vs 題組（id 末尾符合 _數字 的為題組子題）
+            const groupMap = {};
+            const standalones = [];
+
+            filtered.forEach(q => {
+                const m = q.id.match(/^(.+)_(\d+)$/);
+                if (m) {
+                    const key = m[1];
+                    if (!groupMap[key]) groupMap[key] = [];
+                    groupMap[key].push(q);
+                } else {
+                    standalones.push(q);
+                }
+            });
+
+            // 2b. 題組內部依序號排序，確保 _1 < _2 < _3
+            Object.values(groupMap).forEach(group => {
+                group.sort((a, b) => {
+                    const na = parseInt(a.id.match(/_(\d+)$/)[1], 10);
+                    const nb = parseInt(b.id.match(/_(\d+)$/)[1], 10);
+                    return na - nb;
+                });
+            });
+
+            // 2c. 將獨立題與題組視為同等「單元」後打亂
+            const units = [
+                ...standalones.map(q => [q]),
+                ...Object.values(groupMap)
+            ];
+            const shuffledUnits = this.shuffleArray(units);
+
+            // 2d. 展開成最終題目陣列
+            this.activeQuestions = shuffledUnits.flat();
         } else {
             this.activeQuestions = [...filtered];
         }
@@ -1792,4 +1824,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
