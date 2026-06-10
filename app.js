@@ -1844,53 +1844,131 @@ document.addEventListener('DOMContentLoaded', () => {
 // 8. AI 功能模組（API Key 管理、匯入、聊天、出題）
 // ==========================================================================
 
-const AI_KEY_STORAGE  = 'quiz_ai_api_key';
-const AI_MODEL_STORAGE = 'quiz_ai_model';
+// ── 8.0 供應商 / Key / Model 儲存常數 ─────────────────────────────────────
+const AI_PROVIDER_KEY   = 'quiz_ai_provider';   // 'gemini' | 'anthropic'
+const GEMINI_KEY_STORAGE  = 'quiz_gemini_api_key';
+const GEMINI_MODEL_STORAGE = 'quiz_gemini_model';
+const AI_KEY_STORAGE    = 'quiz_ai_api_key';    // Anthropic key（保持相容）
+const AI_MODEL_STORAGE  = 'quiz_ai_model';      // Anthropic model
 
-// ── 8.1 API Key 管理 ────────────────────────────────────────────────────────
+// ── 8.1 供應商切換 ──────────────────────────────────────────────────────────
 
-function loadAiSettings() {
-    const key   = localStorage.getItem(AI_KEY_STORAGE) || '';
-    const model = localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6';
-    const keyInput = document.getElementById('api-key-input');
-    const modelSel = document.getElementById('ai-model-select');
-    if (keyInput)  keyInput.value = key;
-    if (modelSel)  modelSel.value = model;
+function getAiProvider() {
+    return localStorage.getItem(AI_PROVIDER_KEY) || 'gemini';
 }
 
-function getApiKey()   { return localStorage.getItem(AI_KEY_STORAGE) || ''; }
-function getAiModel()  { return localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6'; }
+function switchAiProvider(provider) {
+    localStorage.setItem(AI_PROVIDER_KEY, provider);
+    const geminiBtn    = document.getElementById('provider-gemini-btn');
+    const anthropicBtn = document.getElementById('provider-anthropic-btn');
+    const geminiSet    = document.getElementById('settings-gemini');
+    const anthropicSet = document.getElementById('settings-anthropic');
+
+    const activeClass   = 'flex flex-col items-center p-4 rounded-2xl border-2 border-primary-500 bg-primary-50 transition space-y-2';
+    const inactiveClass = 'flex flex-col items-center p-4 rounded-2xl border-2 border-slate-200 bg-white transition space-y-2 hover:border-slate-300';
+
+    if (provider === 'gemini') {
+        if (geminiBtn)    geminiBtn.className    = activeClass;
+        if (anthropicBtn) anthropicBtn.className = inactiveClass;
+        if (geminiSet)    geminiSet.classList.remove('hidden');
+        if (anthropicSet) anthropicSet.classList.add('hidden');
+    } else {
+        if (anthropicBtn) anthropicBtn.className = activeClass;
+        if (geminiBtn)    geminiBtn.className    = inactiveClass;
+        if (anthropicSet) anthropicSet.classList.remove('hidden');
+        if (geminiSet)    geminiSet.classList.add('hidden');
+    }
+}
+
+// ── 8.2 API Key 管理 ────────────────────────────────────────────────────────
+
+function loadAiSettings() {
+    const provider = getAiProvider();
+
+    // 載入 Gemini 設定
+    const geminiKey   = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+    const geminiModel = localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-2.0-flash';
+    const geminiKeyEl   = document.getElementById('gemini-key-input');
+    const geminiModelEl = document.getElementById('gemini-model-select');
+    if (geminiKeyEl)   geminiKeyEl.value   = geminiKey;
+    if (geminiModelEl) geminiModelEl.value = geminiModel;
+
+    // 載入 Anthropic 設定
+    const claudeKey   = localStorage.getItem(AI_KEY_STORAGE) || '';
+    const claudeModel = localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6';
+    const claudeKeyEl   = document.getElementById('api-key-input');
+    const claudeModelEl = document.getElementById('ai-model-select');
+    if (claudeKeyEl)   claudeKeyEl.value   = claudeKey;
+    if (claudeModelEl) claudeModelEl.value = claudeModel;
+
+    // 套用供應商切換 UI
+    switchAiProvider(provider);
+}
+
+function getApiKey() {
+    const provider = getAiProvider();
+    return provider === 'gemini'
+        ? localStorage.getItem(GEMINI_KEY_STORAGE) || ''
+        : localStorage.getItem(AI_KEY_STORAGE) || '';
+}
+
+function getAiModel() {
+    const provider = getAiProvider();
+    return provider === 'gemini'
+        ? localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-2.0-flash'
+        : localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6';
+}
 
 function saveApiKey() {
-    const key   = document.getElementById('api-key-input').value.trim();
-    const model = document.getElementById('ai-model-select').value;
-    if (!key) { showKeyStatus('請輸入 API Key！', false); return; }
-    localStorage.setItem(AI_KEY_STORAGE, key);
-    localStorage.setItem(AI_MODEL_STORAGE, model);
+    const provider = getAiProvider();
+    if (provider === 'gemini') {
+        const key   = document.getElementById('gemini-key-input')?.value.trim() || '';
+        const model = document.getElementById('gemini-model-select')?.value || 'gemini-2.0-flash';
+        if (!key) { showKeyStatus('請輸入 Gemini API Key！', false); return; }
+        localStorage.setItem(GEMINI_KEY_STORAGE, key);
+        localStorage.setItem(GEMINI_MODEL_STORAGE, model);
+    } else {
+        const key   = document.getElementById('api-key-input')?.value.trim() || '';
+        const model = document.getElementById('ai-model-select')?.value || 'claude-sonnet-4-6';
+        if (!key) { showKeyStatus('請輸入 Anthropic API Key！', false); return; }
+        localStorage.setItem(AI_KEY_STORAGE, key);
+        localStorage.setItem(AI_MODEL_STORAGE, model);
+    }
     showKeyStatus('✅ 已儲存！', true);
 }
 
 function clearApiKey() {
-    if (!confirm('確定要清除已儲存的 API Key 嗎？')) return;
+    if (!confirm('確定要清除所有已儲存的 API Key 嗎？')) return;
+    localStorage.removeItem(GEMINI_KEY_STORAGE);
+    localStorage.removeItem(GEMINI_MODEL_STORAGE);
     localStorage.removeItem(AI_KEY_STORAGE);
     localStorage.removeItem(AI_MODEL_STORAGE);
-    document.getElementById('api-key-input').value = '';
-    showKeyStatus('已清除', false);
+    const geminiKeyEl = document.getElementById('gemini-key-input');
+    const claudeKeyEl = document.getElementById('api-key-input');
+    if (geminiKeyEl) geminiKeyEl.value = '';
+    if (claudeKeyEl) claudeKeyEl.value = '';
+    showKeyStatus('已清除所有 Key', false);
 }
 
-function toggleApiKeyVisibility() {
-    const inp = document.getElementById('api-key-input');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
+function toggleKeyVisibility(inputId) {
+    const inp = document.getElementById(inputId);
+    if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
 }
+
+// 保留舊函式名稱相容性
+function toggleApiKeyVisibility() { toggleKeyVisibility('api-key-input'); }
 
 function showKeyStatus(msg, ok) {
     const el = document.getElementById('api-key-status');
-    el.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-100',
-                                   'bg-red-50',     'text-red-700',     'border-red-100');
-    el.classList.add(ok ? 'bg-emerald-50' : 'bg-red-50',
-                     ok ? 'text-emerald-700' : 'text-red-700',
-                     ok ? 'border-emerald-100' : 'border-red-100',
-                     'border');
+    if (!el) return;
+    el.classList.remove('hidden',
+        'bg-emerald-50', 'text-emerald-700', 'border-emerald-100',
+        'bg-red-50',     'text-red-700',     'border-red-100');
+    el.classList.add(
+        ok ? 'bg-emerald-50' : 'bg-red-50',
+        ok ? 'text-emerald-700' : 'text-red-700',
+        ok ? 'border-emerald-100' : 'border-red-100',
+        'border');
     el.innerText = msg;
     el.classList.remove('hidden');
 }
@@ -1900,24 +1978,84 @@ async function testApiKey() {
     if (!key) { showKeyStatus('請先輸入並儲存 API Key！', false); return; }
     showKeyStatus('🔄 測試中...', true);
     try {
-        const res = await callClaude([{ role: 'user', content: '說"連線成功"四個字就好' }], 50);
-        showKeyStatus('✅ 連線成功！AI 功能已就緒', true);
+        await callAI([{ role: 'user', content: '請回覆「連線成功」四個字' }], 20);
+        showKeyStatus('✅ 連線成功！AI 功能已就緒 (' + getAiProvider().toUpperCase() + ')', true);
     } catch(e) {
         showKeyStatus('❌ 連線失敗：' + e.message, false);
     }
 }
 
-// ── 8.2 核心 API 呼叫函式 ───────────────────────────────────────────────────
+// ── 8.3 核心 AI 呼叫函式（Gemini + Anthropic 統一介面）──────────────────────
 
-async function callClaude(messages, maxTokens = 2000, systemPrompt = '') {
-    const key = getApiKey();
-    if (!key) throw new Error('尚未設定 API Key，請先到「AI 設定」頁面填入');
+/**
+ * 統一 AI 呼叫入口
+ * messages 格式：[{ role: 'user'|'assistant', content: string | array }]
+ * 自動根據 getAiProvider() 路由到對應 API
+ */
+async function callAI(messages, maxTokens = 2000, systemPrompt = '') {
+    const provider = getAiProvider();
+    if (provider === 'gemini') {
+        return await callGemini(messages, maxTokens, systemPrompt);
+    } else {
+        return await callClaude(messages, maxTokens, systemPrompt);
+    }
+}
+
+// Gemini API 呼叫
+async function callGemini(messages, maxTokens = 2000, systemPrompt = '') {
+    const key   = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+    const model = localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-2.0-flash';
+    if (!key) throw new Error('尚未設定 Gemini API Key，請先到「AI 設定」填入');
+
+    // 將 messages 轉成 Gemini 格式
+    const contents = messages.map(m => {
+        // 支援圖片（Anthropic 格式 → Gemini 格式）
+        if (Array.isArray(m.content)) {
+            const parts = m.content.map(c => {
+                if (c.type === 'text') return { text: c.text };
+                if (c.type === 'image') return {
+                    inline_data: { mime_type: c.source.media_type, data: c.source.data }
+                };
+                return { text: JSON.stringify(c) };
+            });
+            return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+        }
+        return { role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] };
+    });
 
     const body = {
-        model: getAiModel(),
-        max_tokens: maxTokens,
-        messages
+        contents,
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
     };
+    if (systemPrompt) {
+        body.systemInstruction = { parts: [{ text: systemPrompt }] };
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg = err?.error?.message || `HTTP ${res.status}`;
+        throw new Error(msg);
+    }
+
+    const data = await res.json();
+    // 取出文字回覆
+    return data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+}
+
+// Anthropic Claude API 呼叫
+async function callClaude(messages, maxTokens = 2000, systemPrompt = '') {
+    const key   = localStorage.getItem(AI_KEY_STORAGE) || '';
+    const model = localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6';
+    if (!key) throw new Error('尚未設定 Anthropic API Key，請先到「AI 設定」填入');
+
+    const body = { model, max_tokens: maxTokens, messages };
     if (systemPrompt) body.system = systemPrompt;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1971,7 +2109,7 @@ function clearImportImage() {
 }
 
 async function runAiImport() {
-    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！\n\n建議使用 Google Gemini（免費額度多）'); switchTab('ai-settings'); return; }
 
     const btn     = document.getElementById('ai-import-btn');
     const btnText = document.getElementById('ai-import-btn-text');
@@ -2022,7 +2160,7 @@ ${categoryHint ? `- 分類請使用：${categoryHint}` : ''}`;
             messages = [{ role: 'user', content: `請將以下題目解析為JSON格式：\n\n${text}` }];
         }
 
-        const raw = await callClaude(messages, 4000, systemPrompt);
+        const raw = await callAI(messages, 4000, systemPrompt);
 
         // 嘗試解析 JSON
         let jsonStr = raw.trim();
@@ -2121,7 +2259,7 @@ async function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const text  = input.value.trim();
     if (!text) return;
-    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！\n\n建議使用 Google Gemini（免費額度多）'); switchTab('ai-settings'); return; }
 
     input.value = '';
     appendChatMessage('user', text);
@@ -2133,7 +2271,7 @@ async function sendChatMessage() {
     const thinkingDiv = appendChatMessage('assistant', '思考中...', true);
 
     try {
-        const reply = await callClaude([...chatHistory], 1500, CHAT_SYSTEM);
+        const reply = await callAI([...chatHistory], 1500, CHAT_SYSTEM);
         thinkingDiv.remove();
         appendChatMessage('assistant', reply);
         chatHistory.push({ role: 'assistant', content: reply });
@@ -2157,7 +2295,7 @@ function sendQuickMessage(text) {
 let generatedQuestions = [];
 
 async function runAiGenerate() {
-    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！\n\n建議使用 Google Gemini（免費額度多）'); switchTab('ai-settings'); return; }
 
     const btn     = document.getElementById('ai-gen-btn');
     const btnText = document.getElementById('ai-gen-btn-text');
@@ -2201,7 +2339,7 @@ ${instruction ? `出題要求：${instruction}` : ''}
 參考知識範圍（僅供參考，請出全新題目，不要重複）：
 ${knowledgeSample || '統計學基本概念'}`;
 
-        const raw = await callClaude([{ role: 'user', content: userMsg }], 4000, systemPrompt);
+        const raw = await callAI([{ role: 'user', content: userMsg }], 4000, systemPrompt);
 
         let jsonStr = raw.trim()
             .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -2598,7 +2736,7 @@ function clearSolverImage() {
 }
 
 async function runSolver() {
-    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！\n\n建議使用 Google Gemini（免費額度多）'); switchTab('ai-settings'); return; }
     const btn = document.getElementById('solver-btn');
     const btnText = document.getElementById('solver-btn-text');
     btn.disabled = true; btnText.innerText = '解題中...';
@@ -2628,7 +2766,7 @@ async function runSolver() {
             messages = [{ role: 'user', content: `請解答以下題目：\n\n${text}` }];
         }
 
-        const answer = await callClaude(messages, 2000, systemPrompt);
+        const answer = await callAI(messages, 2000, systemPrompt);
         document.getElementById('solver-answer').innerText = answer;
         document.getElementById('solver-result').classList.remove('hidden');
         // 暫存供存入筆記用

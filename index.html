@@ -592,7 +592,23 @@
             <div class="max-w-xl mx-auto space-y-6">
                 <div>
                     <h1 class="text-2xl font-extrabold text-slate-800">AI 設定</h1>
-                    <p class="text-slate-500 mt-1 text-sm">設定 Anthropic API Key 以啟用所有 AI 功能</p>
+                    <p class="text-slate-500 mt-1 text-sm">選擇 AI 供應商並設定 API Key</p>
+                </div>
+
+                <!-- 供應商切換 -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="switchAiProvider('gemini')" id="provider-gemini-btn"
+                        class="flex flex-col items-center p-4 rounded-2xl border-2 border-primary-500 bg-primary-50 transition space-y-2">
+                        <span class="text-2xl">🤖</span>
+                        <span class="font-bold text-sm text-primary-700">Google Gemini</span>
+                        <span class="text-[10px] text-primary-500 font-semibold">免費額度最多 ✨</span>
+                    </button>
+                    <button onclick="switchAiProvider('anthropic')" id="provider-anthropic-btn"
+                        class="flex flex-col items-center p-4 rounded-2xl border-2 border-slate-200 bg-white transition space-y-2 hover:border-slate-300">
+                        <span class="text-2xl">🧠</span>
+                        <span class="font-bold text-sm text-slate-700">Anthropic Claude</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">高品質推理</span>
+                    </button>
                 </div>
 
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
@@ -600,34 +616,80 @@
                         <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <div class="text-xs text-amber-700 leading-relaxed">
                             <p class="font-bold mb-1">Key 安全說明</p>
-                            <p>API Key 僅儲存在您的裝置本地（localStorage），不會傳送到任何第三方伺服器。所有 AI 請求直接從您的瀏覽器呼叫 Anthropic API。</p>
+                            <p>API Key 僅儲存在您的裝置本地，不會傳送到任何第三方伺服器。所有 AI 請求直接從您的瀏覽器呼叫 AI API。</p>
                         </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Anthropic API Key</label>
-                        <div class="flex space-x-2">
-                            <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm font-mono">
-                            <button onclick="toggleApiKeyVisibility()" class="px-3 py-2.5 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition text-xs">👁</button>
+                    <!-- Gemini 設定 -->
+                    <div id="settings-gemini" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Google Gemini API Key</label>
+                            <div class="flex space-x-2">
+                                <input type="password" id="gemini-key-input" placeholder="AIza..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm font-mono">
+                                <button onclick="toggleKeyVisibility('gemini-key-input')" class="px-3 py-2.5 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition text-xs">👁</button>
+                            </div>
+                            <p class="text-[11px] text-slate-400">前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-primary-500 underline">aistudio.google.com</a> 免費取得 Key（每分鐘 60 次免費）</p>
                         </div>
-                        <p class="text-[11px] text-slate-400">前往 <a href="https://console.anthropic.com" target="_blank" class="text-primary-500 underline">console.anthropic.com</a> 取得免費 API Key</p>
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Gemini 模型</label>
+                            <select id="gemini-model-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-sm">
+                                <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash（建議，速度快、免費額度大）</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro（更強推理，用量較少）</option>
+                                <option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash Preview（最新預覽版）</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">AI 使用的模型</label>
-                        <select id="ai-model-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-sm">
-                            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快、最省費用）</option>
-                            <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6（建議，速度與品質兼顧）</option>
-                        </select>
+                    <!-- Anthropic 設定 -->
+                    <div id="settings-anthropic" class="space-y-4 hidden">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Anthropic API Key</label>
+                            <div class="flex space-x-2">
+                                <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm font-mono">
+                                <button onclick="toggleKeyVisibility('api-key-input')" class="px-3 py-2.5 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition text-xs">👁</button>
+                            </div>
+                            <p class="text-[11px] text-slate-400">前往 <a href="https://console.anthropic.com" target="_blank" class="text-primary-500 underline">console.anthropic.com</a> 取得 API Key</p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Claude 模型</label>
+                            <select id="ai-model-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-sm">
+                                <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快、最省費用）</option>
+                                <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6（建議）</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div id="api-key-status" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
 
                     <div class="flex space-x-3 pt-2">
-                        <button onclick="saveApiKey()" class="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition">儲存 API Key</button>
+                        <button onclick="saveApiKey()" class="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition">儲存</button>
                         <button onclick="testApiKey()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition">測試連線</button>
                     </div>
-                    <button onclick="clearApiKey()" class="w-full text-xs text-red-400 hover:text-red-600 transition py-1">清除已儲存的 Key</button>
+                    <button onclick="clearApiKey()" class="w-full text-xs text-red-400 hover:text-red-600 transition py-1">清除所有 Key</button>
+                </div>
+
+                <!-- 免費額度比較表 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-700 text-sm mb-3">📊 免費額度比較</h3>
+                    <table class="w-full text-xs text-slate-600">
+                        <thead><tr class="text-slate-400 border-b border-slate-100">
+                            <th class="text-left pb-2">供應商</th>
+                            <th class="text-left pb-2">免費額度</th>
+                            <th class="text-left pb-2">適合用途</th>
+                        </tr></thead>
+                        <tbody class="space-y-1">
+                            <tr class="border-b border-slate-50">
+                                <td class="py-2 font-bold text-blue-600">Gemini</td>
+                                <td class="py-2">每分鐘 60 次<br><span class="text-emerald-600 font-semibold">每月 1500 次免費</span></td>
+                                <td class="py-2">日常使用、出題、匯入</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-bold text-violet-600">Claude</td>
+                                <td class="py-2">新帳號 $5 額度<br><span class="text-slate-400">用完需付費</span></td>
+                                <td class="py-2">複雜推理、詳細解析</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
