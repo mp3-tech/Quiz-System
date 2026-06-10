@@ -1824,3 +1824,542 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ==========================================================================
+// 8. AI 功能模組（API Key 管理、匯入、聊天、出題）
+// ==========================================================================
+
+const AI_KEY_STORAGE  = 'quiz_ai_api_key';
+const AI_MODEL_STORAGE = 'quiz_ai_model';
+
+// ── 8.1 API Key 管理 ────────────────────────────────────────────────────────
+
+function loadAiSettings() {
+    const key   = localStorage.getItem(AI_KEY_STORAGE) || '';
+    const model = localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6';
+    const keyInput = document.getElementById('api-key-input');
+    const modelSel = document.getElementById('ai-model-select');
+    if (keyInput)  keyInput.value = key;
+    if (modelSel)  modelSel.value = model;
+}
+
+function getApiKey()   { return localStorage.getItem(AI_KEY_STORAGE) || ''; }
+function getAiModel()  { return localStorage.getItem(AI_MODEL_STORAGE) || 'claude-sonnet-4-6'; }
+
+function saveApiKey() {
+    const key   = document.getElementById('api-key-input').value.trim();
+    const model = document.getElementById('ai-model-select').value;
+    if (!key) { showKeyStatus('請輸入 API Key！', false); return; }
+    localStorage.setItem(AI_KEY_STORAGE, key);
+    localStorage.setItem(AI_MODEL_STORAGE, model);
+    showKeyStatus('✅ 已儲存！', true);
+}
+
+function clearApiKey() {
+    if (!confirm('確定要清除已儲存的 API Key 嗎？')) return;
+    localStorage.removeItem(AI_KEY_STORAGE);
+    localStorage.removeItem(AI_MODEL_STORAGE);
+    document.getElementById('api-key-input').value = '';
+    showKeyStatus('已清除', false);
+}
+
+function toggleApiKeyVisibility() {
+    const inp = document.getElementById('api-key-input');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function showKeyStatus(msg, ok) {
+    const el = document.getElementById('api-key-status');
+    el.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-100',
+                                   'bg-red-50',     'text-red-700',     'border-red-100');
+    el.classList.add(ok ? 'bg-emerald-50' : 'bg-red-50',
+                     ok ? 'text-emerald-700' : 'text-red-700',
+                     ok ? 'border-emerald-100' : 'border-red-100',
+                     'border');
+    el.innerText = msg;
+    el.classList.remove('hidden');
+}
+
+async function testApiKey() {
+    const key = getApiKey();
+    if (!key) { showKeyStatus('請先輸入並儲存 API Key！', false); return; }
+    showKeyStatus('🔄 測試中...', true);
+    try {
+        const res = await callClaude([{ role: 'user', content: '說"連線成功"四個字就好' }], 50);
+        showKeyStatus('✅ 連線成功！AI 功能已就緒', true);
+    } catch(e) {
+        showKeyStatus('❌ 連線失敗：' + e.message, false);
+    }
+}
+
+// ── 8.2 核心 API 呼叫函式 ───────────────────────────────────────────────────
+
+async function callClaude(messages, maxTokens = 2000, systemPrompt = '') {
+    const key = getApiKey();
+    if (!key) throw new Error('尚未設定 API Key，請先到「AI 設定」頁面填入');
+
+    const body = {
+        model: getAiModel(),
+        max_tokens: maxTokens,
+        messages
+    };
+    if (systemPrompt) body.system = systemPrompt;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.content.map(c => c.text || '').join('');
+}
+
+// ── 8.3 AI 自動匯入題目 ────────────────────────────────────────────────────
+
+let importImageBase64 = null;
+let parsedImportQuestions = [];
+
+function switchImportTab(tab) {
+    const textArea  = document.getElementById('import-text-area');
+    const imageArea = document.getElementById('import-image-area');
+    const textBtn   = document.getElementById('import-tab-text');
+    const imageBtn  = document.getElementById('import-tab-image');
+
+    if (tab === 'text') {
+        textArea.classList.remove('hidden');
+        imageArea.classList.add('hidden');
+        textBtn.className  = 'flex-1 py-2 rounded-xl text-sm font-bold bg-primary-500 text-white shadow transition';
+        imageBtn.className = 'flex-1 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-500 transition hover:bg-slate-200';
+    } else {
+        textArea.classList.add('hidden');
+        imageArea.classList.remove('hidden');
+        imageBtn.className = 'flex-1 py-2 rounded-xl text-sm font-bold bg-primary-500 text-white shadow transition';
+        textBtn.className  = 'flex-1 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-500 transition hover:bg-slate-200';
+    }
+}
+
+function clearImportImage() {
+    importImageBase64 = null;
+    document.getElementById('import-image-preview-box').classList.add('hidden');
+    document.getElementById('import-image-file').value = '';
+}
+
+async function runAiImport() {
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+
+    const btn     = document.getElementById('ai-import-btn');
+    const btnText = document.getElementById('ai-import-btn-text');
+    btn.disabled  = true;
+    btnText.innerText = '🔄 AI 解析中...';
+
+    document.getElementById('import-result-box').classList.add('hidden');
+
+    try {
+        const isImageMode = !document.getElementById('import-image-area').classList.contains('hidden');
+        const categoryHint = document.getElementById('import-category-input')?.value?.trim() || '';
+
+        const systemPrompt = `你是一個考題解析專家。你的任務是將輸入的題目（文字或圖片）解析成JSON格式。
+請嚴格輸出以下JSON陣列格式，不要有任何其他文字、不要有markdown代碼塊：
+[
+  {
+    "category": "分類名稱",
+    "questionText": "完整題目文字",
+    "options": [
+      {"id": "opt_a", "text": "A. 選項文字"},
+      {"id": "opt_b", "text": "B. 選項文字"},
+      {"id": "opt_c", "text": "C. 選項文字"},
+      {"id": "opt_d", "text": "D. 選項文字"}
+    ],
+    "correctOptionId": "opt_b",
+    "explanation": "詳細解析，說明為何此答案正確，並解釋相關知識點"
+  }
+]
+注意：
+- correctOptionId 必須對應正確答案的 id（opt_a/opt_b/opt_c/opt_d 等）
+- 若題目沒有明確答案，請根據統計學知識判斷
+- explanation 請用繁體中文撰寫詳細解析
+- category 若輸入有指定則用指定的，否則請自行判斷（如：統計第六章）
+${categoryHint ? `- 分類請使用：${categoryHint}` : ''}`;
+
+        let messages;
+        if (isImageMode && importImageBase64) {
+            messages = [{
+                role: 'user',
+                content: [
+                    { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: importImageBase64 } },
+                    { type: 'text', text: '請將圖片中所有題目解析為JSON格式，嚴格按照指定格式輸出。' }
+                ]
+            }];
+        } else {
+            const text = document.getElementById('import-text-input').value.trim();
+            if (!text) { alert('請先貼上題目文字！'); btn.disabled = false; btnText.innerText = 'AI 解析並匯入'; return; }
+            messages = [{ role: 'user', content: `請將以下題目解析為JSON格式：\n\n${text}` }];
+        }
+
+        const raw = await callClaude(messages, 4000, systemPrompt);
+
+        // 嘗試解析 JSON
+        let jsonStr = raw.trim();
+        jsonStr = jsonStr.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+        const startIdx = jsonStr.indexOf('[');
+        const endIdx   = jsonStr.lastIndexOf(']');
+        if (startIdx !== -1 && endIdx !== -1) jsonStr = jsonStr.slice(startIdx, endIdx + 1);
+
+        parsedImportQuestions = JSON.parse(jsonStr);
+        renderImportPreview(parsedImportQuestions);
+
+    } catch(e) {
+        alert('解析失敗：' + e.message);
+        console.error(e);
+    }
+
+    btn.disabled = false;
+    btnText.innerText = 'AI 解析並匯入';
+}
+
+function renderImportPreview(questions) {
+    const box  = document.getElementById('import-result-box');
+    const list = document.getElementById('import-result-list');
+
+    list.innerHTML = questions.map((q, i) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs bg-primary-50 text-primary-600 border border-primary-100 px-2.5 py-0.5 rounded-full font-bold">題目 ${i+1}</span>
+                <span class="text-xs text-slate-400 font-semibold">${q.category || '未分類'}</span>
+            </div>
+            <p class="font-bold text-slate-800 text-sm leading-relaxed">${q.questionText}</p>
+            <div class="space-y-1.5">
+                ${(q.options || []).map(o => `
+                    <div class="flex items-center space-x-2 text-sm ${o.id === q.correctOptionId ? 'text-emerald-700 font-bold' : 'text-slate-500'}">
+                        <span class="w-4 h-4 rounded-full flex-shrink-0 ${o.id === q.correctOptionId ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'} flex items-center justify-center text-[10px]">${o.id === q.correctOptionId ? '✓' : '·'}</span>
+                        <span>${o.text}</span>
+                    </div>`).join('')}
+            </div>
+            ${q.explanation ? `<div class="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 leading-relaxed"><span class="font-bold text-slate-700">💡 解析：</span>${q.explanation.slice(0, 150)}${q.explanation.length > 150 ? '...' : ''}</div>` : ''}
+        </div>
+    `).join('');
+
+    box.classList.remove('hidden');
+}
+
+function confirmImportAll() {
+    if (!parsedImportQuestions.length) return;
+    parsedImportQuestions.forEach(q => {
+        qManager.saveQuestion({
+            category:        q.category || '未分類',
+            questionText:    q.questionText,
+            options:         q.options,
+            correctOptionId: q.correctOptionId,
+            explanation:     q.explanation || '',
+            image:           null
+        });
+    });
+    alert(`✅ 已成功加入 ${parsedImportQuestions.length} 道題目到題庫！`);
+    parsedImportQuestions = [];
+    document.getElementById('import-result-box').classList.add('hidden');
+    document.getElementById('import-text-input').value = '';
+    clearImportImage();
+    switchTab('questions');
+}
+
+// ── 8.4 AI 解題聊天助理 ────────────────────────────────────────────────────
+
+let chatHistory = [];
+const CHAT_SYSTEM = `你是一位親切的統計學家教 AI，專門幫助學生理解統計學概念。
+你的風格：
+- 使用繁體中文回答
+- 解釋要清楚，多用例子
+- 適時使用公式（用文字表示，如 X̄、μ、σ）
+- 如果學生貼上題目，先給答案再詳細解析
+- 使用表情符號讓回答更生動 📊`;
+
+function appendChatMessage(role, text, isStreaming = false) {
+    const container = document.getElementById('chat-messages');
+    const isUser = role === 'user';
+
+    const div = document.createElement('div');
+    div.className = `flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+    div.innerHTML = `
+        <div class="w-8 h-8 rounded-full ${isUser ? 'bg-slate-200' : 'bg-primary-500'} flex items-center justify-center flex-shrink-0 text-xs font-bold ${isUser ? 'text-slate-600' : 'text-white'}">
+            ${isUser ? '我' : 'AI'}
+        </div>
+        <div class="${isUser ? 'bg-primary-50 rounded-2xl rounded-tr-none' : 'bg-slate-50 rounded-2xl rounded-tl-none'} px-4 py-3 max-w-[85%]">
+            <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap" id="${isStreaming ? 'streaming-msg' : ''}">${text}</p>
+        </div>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const text  = input.value.trim();
+    if (!text) return;
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+
+    input.value = '';
+    appendChatMessage('user', text);
+    chatHistory.push({ role: 'user', content: text });
+
+    const btn = document.getElementById('chat-send-btn');
+    btn.disabled = true;
+
+    const thinkingDiv = appendChatMessage('assistant', '思考中...', true);
+
+    try {
+        const reply = await callClaude([...chatHistory], 1500, CHAT_SYSTEM);
+        thinkingDiv.remove();
+        appendChatMessage('assistant', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+        // 保留最近 20 條對話（避免 token 過多）
+        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+    } catch(e) {
+        thinkingDiv.remove();
+        appendChatMessage('assistant', '❌ 發生錯誤：' + e.message);
+    }
+
+    btn.disabled = false;
+}
+
+function sendQuickMessage(text) {
+    document.getElementById('chat-input').value = text;
+    sendChatMessage();
+}
+
+// ── 8.5 AI 智慧出題 ────────────────────────────────────────────────────────
+
+let generatedQuestions = [];
+
+async function runAiGenerate() {
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+
+    const btn     = document.getElementById('ai-gen-btn');
+    const btnText = document.getElementById('ai-gen-btn-text');
+    btn.disabled  = true;
+    btnText.innerText = '🔄 AI 出題中...';
+    document.getElementById('gen-result-box').classList.add('hidden');
+
+    try {
+        const cat         = document.getElementById('gen-category-select').value;
+        const count       = document.getElementById('gen-count-select').value;
+        const instruction = document.getElementById('gen-instruction-input').value.trim();
+
+        // 取得現有題庫作為知識基礎
+        const allQ = qManager.getAll();
+        const refQ = cat === 'all' ? allQ : allQ.filter(q => q.category === cat);
+        const knowledgeSample = refQ.slice(0, 15).map(q =>
+            `題目：${q.questionText}\n正確答案：${q.options?.find(o => o.id === q.correctOptionId)?.text || ''}`
+        ).join('\n---\n');
+
+        const systemPrompt = `你是一位出色的統計學出題老師。根據提供的知識範圍，出全新的練習題。
+請嚴格輸出以下JSON陣列格式，不要有任何其他文字、不要有markdown代碼塊：
+[
+  {
+    "category": "分類名稱",
+    "questionText": "完整題目文字（不要與原題目相同，要是全新的）",
+    "options": [
+      {"id": "opt_a", "text": "A. 選項"},
+      {"id": "opt_b", "text": "B. 選項"},
+      {"id": "opt_c", "text": "C. 選項"},
+      {"id": "opt_d", "text": "D. 選項"}
+    ],
+    "correctOptionId": "opt_x",
+    "explanation": "詳細解析"
+  }
+]`;
+
+        const userMsg = `根據以下知識範圍，出 ${count} 道全新的選擇題：
+${instruction ? `出題要求：${instruction}` : ''}
+分類：${cat === 'all' ? '全部統計學範圍' : cat}
+
+參考知識範圍（僅供參考，請出全新題目，不要重複）：
+${knowledgeSample || '統計學基本概念'}`;
+
+        const raw = await callClaude([{ role: 'user', content: userMsg }], 4000, systemPrompt);
+
+        let jsonStr = raw.trim()
+            .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+        const si = jsonStr.indexOf('['), ei = jsonStr.lastIndexOf(']');
+        if (si !== -1 && ei !== -1) jsonStr = jsonStr.slice(si, ei + 1);
+
+        generatedQuestions = JSON.parse(jsonStr);
+        renderGeneratedQuestions(generatedQuestions);
+
+    } catch(e) {
+        alert('出題失敗：' + e.message);
+        console.error(e);
+    }
+
+    btn.disabled = false;
+    btnText.innerText = 'AI 開始出題';
+}
+
+function renderGeneratedQuestions(questions) {
+    const box  = document.getElementById('gen-result-box');
+    const list = document.getElementById('gen-result-list');
+
+    list.innerHTML = questions.map((q, i) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3" id="gen-q-${i}">
+            <div class="flex items-center justify-between">
+                <span class="text-xs bg-violet-50 text-violet-600 border border-violet-100 px-2.5 py-0.5 rounded-full font-bold">✨ AI 新題 ${i+1}</span>
+                <span class="text-xs text-slate-400 font-semibold">${q.category || ''}</span>
+            </div>
+            <p class="font-bold text-slate-800 text-sm leading-relaxed">${q.questionText}</p>
+            <div class="space-y-2" id="gen-opts-${i}">
+                ${(q.options || []).map(o => `
+                    <button onclick="selectGenOption(${i}, '${o.id}')"
+                        data-opt="${o.id}"
+                        class="gen-opt-btn w-full text-left text-sm px-4 py-2.5 rounded-xl border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-700 transition font-medium">
+                        ${o.text}
+                    </button>`).join('')}
+            </div>
+            <div id="gen-feedback-${i}" class="hidden p-3 bg-slate-50 rounded-xl text-xs text-slate-600 leading-relaxed"></div>
+        </div>
+    `).join('');
+
+    box.classList.remove('hidden');
+}
+
+function selectGenOption(qIdx, selectedOptId) {
+    const q = generatedQuestions[qIdx];
+    if (!q) return;
+
+    const btns = document.querySelectorAll(`#gen-opts-${qIdx} .gen-opt-btn`);
+    btns.forEach(btn => {
+        const bOpt = btn.getAttribute('data-opt');
+        if (bOpt === q.correctOptionId) {
+            btn.className = 'gen-opt-btn w-full text-left text-sm px-4 py-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-800 font-bold transition';
+        } else if (bOpt === selectedOptId) {
+            btn.className = 'gen-opt-btn w-full text-left text-sm px-4 py-2.5 rounded-xl border-2 border-red-400 bg-red-50 text-red-800 font-bold transition';
+        } else {
+            btn.className = 'gen-opt-btn w-full text-left text-sm px-4 py-2.5 rounded-xl border border-slate-100 text-slate-300 transition opacity-60';
+        }
+        btn.disabled = true;
+    });
+
+    const fb = document.getElementById(`gen-feedback-${qIdx}`);
+    const isCorrect = selectedOptId === q.correctOptionId;
+    fb.innerHTML = `<span class="font-bold ${isCorrect ? 'text-emerald-700' : 'text-red-700'}">${isCorrect ? '✅ 答對了！' : '❌ 答錯了'}</span>　${q.explanation || ''}`;
+    fb.classList.remove('hidden');
+}
+
+function confirmGenerateAll() {
+    if (!generatedQuestions.length) return;
+    generatedQuestions.forEach(q => {
+        qManager.saveQuestion({
+            category:        q.category || '未分類',
+            questionText:    q.questionText,
+            options:         q.options,
+            correctOptionId: q.correctOptionId,
+            explanation:     q.explanation || '',
+            image:           null
+        });
+    });
+    alert(`✅ 已成功加入 ${generatedQuestions.length} 道 AI 生成題目到題庫！`);
+    generatedQuestions = [];
+    document.getElementById('gen-result-box').classList.add('hidden');
+    switchTab('questions');
+}
+
+// ── 8.6 初始化 AI 相關 UI 事件 ────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 載入已儲存的 API Key
+    loadAiSettings();
+
+    // 圖片上傳（AI 匯入）
+    const importDropzone = document.getElementById('import-image-dropzone');
+    const importFileInput = document.getElementById('import-image-file');
+
+    if (importDropzone) {
+        importDropzone.addEventListener('click', () => importFileInput.click());
+        importDropzone.addEventListener('dragover', e => { e.preventDefault(); importDropzone.classList.add('border-primary-400'); });
+        importDropzone.addEventListener('dragleave', () => importDropzone.classList.remove('border-primary-400'));
+        importDropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            importDropzone.classList.remove('border-primary-400');
+            if (e.dataTransfer.files[0]) handleImportImage(e.dataTransfer.files[0]);
+        });
+    }
+
+    if (importFileInput) {
+        importFileInput.addEventListener('change', e => {
+            if (e.target.files[0]) handleImportImage(e.target.files[0]);
+        });
+    }
+
+    // 聊天輸入框 Enter 送出（Shift+Enter 換行）
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+        });
+    }
+
+    // 匯入頁分類下拉選單填入
+    const importCatSel = document.getElementById('import-category-input');
+    if (importCatSel) {
+        qManager.getCategories().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.text = c;
+            importCatSel.appendChild(opt);
+        });
+    }
+});
+
+// switchTab 擴充：進入 AI 頁面時更新下拉選單
+const _origSwitchTab = switchTab;
+// Monkey-patch switchTab to also handle AI tabs
+const switchTabOrig = switchTab;
+window.switchTab = function(tabId) {
+    switchTabOrig(tabId);
+    if (tabId === 'ai-generate') {
+        const sel = document.getElementById('gen-category-select');
+        if (sel) {
+            sel.innerHTML = '<option value="all">根據全部題庫</option>';
+            qManager.getCategories().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.text = c;
+                sel.appendChild(opt);
+            });
+        }
+    }
+    if (tabId === 'ai-import') {
+        const sel = document.getElementById('import-category-input');
+        if (sel) {
+            sel.innerHTML = '<option value="">自動偵測分類</option>';
+            qManager.getCategories().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.text = c;
+                sel.appendChild(opt);
+            });
+        }
+    }
+    if (tabId === 'ai-settings') {
+        loadAiSettings();
+    }
+};
+
+function handleImportImage(file) {
+    if (!file.type.startsWith('image/')) { alert('請選擇圖片檔案！'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+        const base64Full = e.target.result;
+        importImageBase64 = base64Full.split(',')[1];
+        const preview = document.getElementById('import-image-preview');
+        preview.src = base64Full;
+        document.getElementById('import-image-preview-box').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}

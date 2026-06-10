@@ -2,8 +2,22 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>網頁智慧複習系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>智慧複習系統</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="複習系統">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="description" content="統計學複習考題系統，支援離線使用">
+
+    <!-- PWA Icons -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tailwind Config for customization -->
@@ -30,6 +44,21 @@
     <link href="style.css" rel="stylesheet">
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col md:flex-row">
+
+    <!-- PWA 安裝提示橫幅（Android Chrome 自動顯示） -->
+    <div id="pwa-install-banner" class="hidden fixed bottom-0 left-0 right-0 z-50 bg-primary-500 text-white px-4 py-3 flex items-center justify-between shadow-2xl">
+        <div class="flex items-center space-x-3">
+            <img src="icon-192.png" class="w-9 h-9 rounded-xl shadow" alt="icon">
+            <div>
+                <p class="font-bold text-sm">安裝智慧複習系統</p>
+                <p class="text-xs text-primary-100">加到桌面，隨時離線使用</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="installPWA()" class="bg-white text-primary-600 font-bold text-xs px-4 py-2 rounded-lg shadow">安裝</button>
+            <button onclick="document.getElementById('pwa-install-banner').classList.add('hidden')" class="text-primary-200 hover:text-white text-xs px-2 py-2">✕</button>
+        </div>
+    </div>
 
     <!-- 頂部導覽列（行動裝置） -->
     <div class="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40 w-full shadow-sm">
@@ -70,11 +99,42 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
                 <span>開始考題複習</span>
             </button>
+
+            <!-- 分隔線 -->
+            <div class="pt-2 pb-1 px-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI 智慧功能</p>
+            </div>
+
+            <button data-tab="ai-import" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span>AI 自動匯入題目</span>
+            </button>
+
+            <button data-tab="ai-chat" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <span>AI 解題助理</span>
+            </button>
+
+            <button data-tab="ai-generate" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/><circle cx="12" cy="12" r="9" stroke-width="2"/></svg>
+                <span>AI 智慧出題</span>
+            </button>
+
+            <button data-tab="ai-settings" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-150 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>AI 設定 / API Key</span>
+            </button>
         </nav>
 
         <!-- 底部資訊 -->
-        <div class="p-4 border-t border-slate-100 text-xs text-slate-400 text-center">
-            智慧複習系統 v1.0<br>本地離線資料庫保護中
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-400 text-center space-y-2">
+            <p>智慧複習系統 v1.1 · PWA</p>
+            <p class="text-slate-300">離線資料庫保護中</p>
+            <!-- iOS 安裝提示 -->
+            <div class="md:hidden text-[10px] text-slate-300 leading-relaxed pt-1 border-t border-slate-100">
+                <p class="font-semibold text-slate-400 mb-0.5">📱 iPhone 加到桌面</p>
+                <p>Safari → 分享 → 加入主畫面</p>
+            </div>
         </div>
     </aside>
 
@@ -494,6 +554,205 @@
             </div>
         </section>
 
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- AI 設定 / API Key VIEW                      -->
+        <!-- ══════════════════════════════════════════ -->
+        <section id="view-ai-settings" class="view-section space-y-6 hidden">
+            <div class="max-w-xl mx-auto space-y-6">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-800">AI 設定</h1>
+                    <p class="text-slate-500 mt-1 text-sm">設定 Anthropic API Key 以啟用所有 AI 功能</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                    <div class="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                        <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="text-xs text-amber-700 leading-relaxed">
+                            <p class="font-bold mb-1">Key 安全說明</p>
+                            <p>API Key 僅儲存在您的裝置本地（localStorage），不會傳送到任何第三方伺服器。所有 AI 請求直接從您的瀏覽器呼叫 Anthropic API。</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Anthropic API Key</label>
+                        <div class="flex space-x-2">
+                            <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm font-mono">
+                            <button onclick="toggleApiKeyVisibility()" class="px-3 py-2.5 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 transition text-xs">👁</button>
+                        </div>
+                        <p class="text-[11px] text-slate-400">前往 <a href="https://console.anthropic.com" target="_blank" class="text-primary-500 underline">console.anthropic.com</a> 取得免費 API Key</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">AI 使用的模型</label>
+                        <select id="ai-model-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-sm">
+                            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快、最省費用）</option>
+                            <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6（建議，速度與品質兼顧）</option>
+                        </select>
+                    </div>
+
+                    <div id="api-key-status" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+                    <div class="flex space-x-3 pt-2">
+                        <button onclick="saveApiKey()" class="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition">儲存 API Key</button>
+                        <button onclick="testApiKey()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition">測試連線</button>
+                    </div>
+                    <button onclick="clearApiKey()" class="w-full text-xs text-red-400 hover:text-red-600 transition py-1">清除已儲存的 Key</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- AI 自動匯入題目 VIEW                        -->
+        <!-- ══════════════════════════════════════════ -->
+        <section id="view-ai-import" class="view-section space-y-6 hidden">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-800">AI 自動匯入題目</h1>
+                    <p class="text-slate-500 mt-1 text-sm">貼上題目文字或上傳題目圖片，AI 自動解析並加入題庫</p>
+                </div>
+
+                <!-- 輸入區 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <!-- 模式切換 -->
+                    <div class="flex space-x-2">
+                        <button id="import-tab-text" onclick="switchImportTab('text')" class="flex-1 py-2 rounded-xl text-sm font-bold bg-primary-500 text-white shadow transition">📝 貼文字</button>
+                        <button id="import-tab-image" onclick="switchImportTab('image')" class="flex-1 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-500 transition hover:bg-slate-200">📷 上傳圖片</button>
+                    </div>
+
+                    <!-- 文字輸入 -->
+                    <div id="import-text-area">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">貼上題目文字（可一次貼多題）</label>
+                        <textarea id="import-text-input" rows="10" placeholder="例如：&#10;1. 下列何者屬於集群抽樣？&#10;A. 先依年齡分層後再抽樣&#10;B. 先隨機抽取幾個班級，再對該班全部施測&#10;C. 每隔10人抽1人&#10;D. 隨機找到誰就問誰&#10;答案：B&#10;&#10;2. ..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm resize-none"></textarea>
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-[11px] text-slate-400">AI 會自動判斷題目格式、選項、正確答案，並補充詳解</p>
+                            <select id="import-category-input" class="text-xs border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                <option value="">自動偵測分類</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 圖片上傳 -->
+                    <div id="import-image-area" class="hidden">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">上傳題目圖片</label>
+                        <div id="import-image-dropzone" class="border-2 border-dashed border-slate-200 hover:border-primary-400 bg-slate-50 rounded-xl p-8 text-center cursor-pointer transition space-y-2">
+                            <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 00-2 2z"/></svg>
+                            <p class="text-sm text-slate-500">點擊或拖曳圖片至此</p>
+                            <p class="text-xs text-slate-400">支援 JPG、PNG，AI 將自動辨識題目內容</p>
+                            <input type="file" id="import-image-file" accept="image/*" class="hidden">
+                        </div>
+                        <div id="import-image-preview-box" class="hidden mt-3">
+                            <img id="import-image-preview" class="max-h-64 rounded-xl border border-slate-200 mx-auto object-contain" alt="預覽">
+                            <button onclick="clearImportImage()" class="mt-2 text-xs text-red-400 hover:text-red-600 block mx-auto">移除圖片</button>
+                        </div>
+                    </div>
+
+                    <button onclick="runAiImport()" id="ai-import-btn" class="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span id="ai-import-btn-text">AI 解析並匯入</span>
+                    </button>
+                </div>
+
+                <!-- 解析結果預覽 -->
+                <div id="import-result-box" class="hidden space-y-4">
+                    <h3 class="font-bold text-slate-700 flex items-center space-x-2">
+                        <span class="w-2 h-5 bg-primary-500 rounded-full block"></span>
+                        <span>解析結果預覽（確認後再加入題庫）</span>
+                    </h3>
+                    <div id="import-result-list" class="space-y-4"></div>
+                    <button onclick="confirmImportAll()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md transition">✅ 全部加入題庫</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- AI 解題助理 VIEW                            -->
+        <!-- ══════════════════════════════════════════ -->
+        <section id="view-ai-chat" class="view-section hidden">
+            <div class="max-w-3xl mx-auto flex flex-col h-[calc(100vh-120px)]">
+                <div class="mb-4">
+                    <h1 class="text-2xl font-extrabold text-slate-800">AI 解題助理</h1>
+                    <p class="text-slate-500 mt-1 text-sm">有不懂的題目或觀念，直接問 AI！</p>
+                </div>
+
+                <!-- 聊天紀錄 -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto space-y-4 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm mb-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">AI</div>
+                        <div class="bg-slate-50 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%]">
+                            <p class="text-sm text-slate-700 leading-relaxed">你好！我是你的統計學 AI 助理 📊<br>你可以問我任何統計觀念、考題解析、或貼上題目讓我幫你解答！</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快捷按鈕 -->
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <button onclick="sendQuickMessage('解釋中央極限定理')" class="text-xs bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 px-3 py-1.5 rounded-full transition">中央極限定理</button>
+                    <button onclick="sendQuickMessage('什麼是型I誤差和型II誤差？')" class="text-xs bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 px-3 py-1.5 rounded-full transition">型I/II誤差</button>
+                    <button onclick="sendQuickMessage('卡方檢定的使用時機和步驟？')" class="text-xs bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 px-3 py-1.5 rounded-full transition">卡方檢定</button>
+                    <button onclick="sendQuickMessage('假設檢定的完整步驟是什麼？')" class="text-xs bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 px-3 py-1.5 rounded-full transition">假設檢定步驟</button>
+                </div>
+
+                <!-- 輸入框 -->
+                <div class="flex space-x-2">
+                    <textarea id="chat-input" rows="2" placeholder="輸入你的問題，或貼上題目讓 AI 解析..." class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm resize-none"></textarea>
+                    <button onclick="sendChatMessage()" id="chat-send-btn" class="bg-primary-500 hover:bg-primary-600 text-white font-bold px-5 rounded-xl shadow-md transition flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- AI 智慧出題 VIEW                            -->
+        <!-- ══════════════════════════════════════════ -->
+        <section id="view-ai-generate" class="view-section space-y-6 hidden">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-800">AI 智慧出題</h1>
+                    <p class="text-slate-500 mt-1 text-sm">AI 根據你的題庫內容，自動生成全新練習題</p>
+                </div>
+
+                <!-- 設定區 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">出題分類</label>
+                            <select id="gen-category-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-sm">
+                                <option value="all">根據全部題庫</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">出題數量</label>
+                            <select id="gen-count-select" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-sm">
+                                <option value="3">3 題</option>
+                                <option value="5" selected>5 題</option>
+                                <option value="10">10 題</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">難度與出題方向（選填）</label>
+                        <input type="text" id="gen-instruction-input" placeholder="例如：著重在計算題、多出觀念辨析題、偏難..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm">
+                    </div>
+                    <button onclick="runAiGenerate()" id="ai-gen-btn" class="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span id="ai-gen-btn-text">AI 開始出題</span>
+                    </button>
+                </div>
+
+                <!-- 生成結果 -->
+                <div id="gen-result-box" class="hidden space-y-4">
+                    <h3 class="font-bold text-slate-700 flex items-center space-x-2">
+                        <span class="w-2 h-5 bg-primary-500 rounded-full block"></span>
+                        <span>AI 生成題目（可直接作答，或加入題庫）</span>
+                    </h3>
+                    <div id="gen-result-list" class="space-y-4"></div>
+                    <button onclick="confirmGenerateAll()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md transition">✅ 全部加入題庫</button>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- ========================================== -->
@@ -563,10 +822,21 @@
 
                 <!-- 動態選項設定（核心需求） -->
                 <div class="space-y-2">
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">選項清單與設定正確答案</label>
-                        <span class="text-[10px] text-slate-400">請勾選左側單選鈕來設定「正確答案」</span>
+                        <!-- 題型切換 -->
+                        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg">
+                            <button type="button" id="type-single-btn" onclick="setQuestionType('single')"
+                                class="px-3 py-1 text-xs font-bold rounded-md bg-white text-primary-600 shadow-sm transition">
+                                單選題
+                            </button>
+                            <button type="button" id="type-multiple-btn" onclick="setQuestionType('multiple')"
+                                class="px-3 py-1 text-xs font-bold rounded-md text-slate-500 transition hover:text-slate-700">
+                                複選題
+                            </button>
+                        </div>
                     </div>
+                    <p id="modal-type-hint" class="text-[10px] text-slate-400">請勾選左側單選鈕來設定「唯一正確答案」</p>
 
                     <div id="modal-options-list" class="space-y-2.5">
                         <!-- 動態選項由 JS 動態增減渲染 -->
@@ -599,6 +869,40 @@
 
     <!-- 載入核心邏輯 JavaScript -->
     <script src="app.js"></script>
+
+    <!-- PWA Service Worker 註冊 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.warn('SW registration failed:', err));
+            });
+        }
+
+        // Android Chrome 安裝提示
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => {
+                deferredPrompt = null;
+                const banner = document.getElementById('pwa-install-banner');
+                if (banner) banner.classList.add('hidden');
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.add('hidden');
+        });
+    </script>
 </body>
 </html>
-
