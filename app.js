@@ -8,511 +8,798 @@
 const STORAGE_KEY = 'web_review_questions_db';
 const HISTORY_KEY = 'web_review_quiz_history';
 
-// 預設考題：統計學第六章、第八章、第十章
+// 預設考題：圖書館史（第一份：文字微調、第二份：觀念反轉、第三份：終極混亂）
 const DEFAULT_QUESTIONS = [
-
     // =====================================================================
-    // 統計第六章：抽樣方法與抽樣分配
+    // 圖書館史：第一份（文字微調型）
     // =====================================================================
     {
-        id: 'q_ch6_01',
-        category: '統計第六章',
-        questionText: '下列哪一個不是隨機樣本的必要條件？',
+        id: 'lib_p1_tf_01',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】民國時期在日內瓦成立的中國國際圖書館，中途曾輾轉至烏拉圭，並於民國 80 年代最終落腳於國家圖書館。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 樣本要抽自相同母體' },
-            { id: 'opt_b', text: 'B. 樣本間要相互獨立' },
-            { id: 'opt_c', text: 'C. 要採隨機抽樣進行抽樣' },
-            { id: 'opt_d', text: 'D. 母體一定要常態母體' }
-        ],
-        correctOptionId: 'opt_d',
-        explanation: '【正確答案：D】\n隨機抽樣的三個必要條件：\n①樣本來自同一母體\n②樣本彼此獨立（每次抽樣不影響下次）\n③採用隨機／機率方式抽樣\n\n母體是否為常態分配，只影響樣本平均數的抽樣分配形狀，並非隨機樣本的必要條件。即使母體非常態，只要樣本數夠大（中央極限定理），樣本平均數仍會近似常態分配。'
-    },
-    {
-        id: 'q_ch6_02',
-        category: '統計第六章',
-        questionText: '高雄市政府想要瞭解市民對防治登革熱績效的看法，根據統計高雄市現有 38 個區共 891 個里，隨機由 38 個區中隨機各抽取 3 個里，共 114 個里進行普查，試問這是何種抽樣方法？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 簡單隨機抽樣' },
-            { id: 'opt_b', text: 'B. 分層抽樣' },
-            { id: 'opt_c', text: 'C. 系統抽樣' },
-            { id: 'opt_d', text: 'D. 集群抽樣' }
-        ],
-        correctOptionId: 'opt_d',
-        explanation: '【正確答案：D】集群抽樣（Cluster Sampling）\n\n步驟說明：\n①先將母體分成若干「群（cluster）」→ 38 個區\n②從群中隨機抽取幾群 → 各區隨機抽 3 個里\n③對抽中的群進行普查 → 114 個里全部普查\n\n與分層抽樣的區別：分層抽樣是在每層中抽取部分個體；集群抽樣則是抽取整個群後對群內全部成員普查。'
-    },
-    {
-        id: 'q_ch6_03',
-        category: '統計第六章',
-        questionText: '教育部對某五專觀光學系進行系所評鑑，須訪談該系的學生，該系共有 250 位同學，評鑑委員欲抽取 10 位同學進行訪談，請系上助理將同學由 1 號編到 250 號，並以 25 位同學為一組，共分為 A～J 等 10 組，評鑑委員由 A 組隨機抽取一個號碼後，請系上助理將此號碼依序加上 25 後，抽取訪談同學的編號，試問這是何種抽樣方法？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 簡單隨機抽樣' },
-            { id: 'opt_b', text: 'B. 分層抽樣' },
-            { id: 'opt_c', text: 'C. 系統抽樣' },
-            { id: 'opt_d', text: 'D. 集群抽樣' }
-        ],
-        correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】系統抽樣（Systematic Sampling）\n\n步驟說明：\n①將 250 人編號 1～250\n②計算抽樣間距 k = 250 ÷ 10 = 25\n③在第一組（1～25）中隨機抽取一個起始號碼\n④之後每隔 25 號抽取一位，共抽 10 人\n\n特徵：「先編號，每隔 k 個抽 1 位」即為系統抽樣的標誌。'
-    },
-    {
-        id: 'q_ch6_04',
-        category: '統計第六章',
-        questionText: '某校欲瞭解大學生對「反送中」的看法，在校園看到同學就問，試問這是何種抽樣方法？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 便利抽樣' },
-            { id: 'opt_b', text: 'B. 立意抽樣' },
-            { id: 'opt_c', text: 'C. 配額抽樣' },
-            { id: 'opt_d', text: 'D. 滾雪球抽樣' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】便利抽樣（Convenience Sampling）\n\n說明：依照便利性（看到同學就問）進行抽樣，屬於非機率抽樣方法，樣本代表性較低。\n\n各非機率抽樣比較：\n• 便利抽樣：依方便性取樣，最省時省力\n• 立意抽樣：研究者依判斷選取具代表性的對象\n• 配額抽樣：依母體特徵比例設定配額後取樣\n• 滾雪球抽樣：由受訪者介紹其他受訪者，適合特殊族群'
+        explanation: '【正確答案：○ 對】\n中國國際圖書館在民國時期創立於瑞士日內瓦，流轉至烏拉圭後，最終於民國 80 年代返回台灣安頓，並落腳於「國家圖書館」，而非台灣圖書館。'
     },
     {
-        id: 'q_ch6_05',
-        category: '統計第六章',
-        questionText: '抽樣分配指的是哪一個數的機率分配？',
+        id: 'lib_p1_tf_02',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】圖書館專業的構成要素非常嚴謹，僅包含專業人才培育、知識體系、社會價值與倫理守則，並不包含任何學會組織。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 母體平均數' },
-            { id: 'opt_b', text: 'B. 樣本平均數' },
-            { id: 'opt_c', text: 'C. 母體變異數' },
-            { id: 'opt_d', text: 'D. 母體比例' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】\n\n抽樣分配（Sampling Distribution）是統計量（Statistic）的機率分配。\n\n統計量是由母體中抽出之隨機樣本所計算出的數值（如樣本平均數 X̄、樣本比例 p̂ 等）。\n\n母體參數（μ、σ²、P）是固定的常數，不是隨機變數，因此沒有機率分配。\n只有統計量（如樣本平均數 X̄）會因每次抽取的樣本不同而改變，才具有抽樣分配。'
+        explanation: '【正確答案：✗ 錯】\n除了專業人才培育、知識體系、社會價值與倫理守則外，「學會組織」（如中華民國圖書館學會）也是構成圖書館專業不可或缺的重要核心要素。'
     },
     {
-        id: 'q_ch6_06',
-        category: '統計第六章',
-        questionText: '依據中央極限定理，當下列哪一個條件成立時，任何統計量的機率分配都會近似常態分配？',
+        id: 'lib_p1_tf_03',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】中華民國圖書館學會於民國 42 年在台設置，就其歷史性質而言，屬於恢復在大陸時期的既有組織。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 樣本數夠大' },
-            { id: 'opt_b', text: 'B. 樣本平均數夠大' },
-            { id: 'opt_c', text: 'C. 樣本標準差夠大' },
-            { id: 'opt_d', text: 'D. 樣本變異數夠大' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】\n\n中央極限定理（Central Limit Theorem）：\n無論母體分配的形狀為何，當樣本數 n 越大（通常 n ≥ 30），樣本平均數 X̄ 的抽樣分配會趨近於常態分配。\n\n公式：X̄ ~ N(μ, σ²/n)\n\n關鍵：是「樣本數夠大」，而非樣本平均數、標準差或變異數夠大。'
+        explanation: '【正確答案：○ 對】\n中華民國圖書館學會（原名中國圖書館學會）在台復會，在性質上屬於「恢復」大陸時期的組織與血統。'
     },
     {
-        id: 'q_ch6_07_1',
-        category: '統計第六章',
-        questionText: '【民宿題組 (1)】一優質民宿內有四間不同等級的房間，房價分別為1,000、2,000、2,000 與 4,000 元，每天提供兩間出租，令 X 表示今年暑假出租房間的房價，令 X̄ = (X₁ + X₂)/2 表每天每間房間的平均價格。\n\n試求 X̄ 抽樣分配中，①（X̄ = 1500 時的機率分子）對應的 X̄ 值為何？\n\n（提示：四間房 ABCD，A=1000、B=2000、C=2000、D=4000，每次出租兩間）',
+        id: 'lib_p1_tf_04',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】中華民國圖書館學會創立之初，為了迅速推展會務、確立發展方向，當時即有選任第一任理事長。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 1000' },
-            { id: 'opt_b', text: 'B. 1500' },
-            { id: 'opt_c', text: 'C. 2000' },
-            { id: 'opt_d', text: 'D. 4000' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】X̄ = 1500\n\n每天出租兩間，所有可能組合（C(4,2)=6種）：\n• AB：(1000+2000)/2 = 1500　→ f(x̄) = 2/6（AB、AC）\n• AC：(1000+2000)/2 = 1500\n• AD：(1000+4000)/2 = 2500　→ f(x̄) = 1/6\n• BC：(2000+2000)/2 = 2000　→ f(x̄) = 1/6\n• BD：(2000+4000)/2 = 3000　→ f(x̄) = 2/6（BD、CD）\n• CD：(2000+4000)/2 = 3000\n\n抽樣分配表：\nx̄ = 1500：f(x̄) = 2/6\nx̄ = 2000（此題①）：f(x̄) 見下題\nx̄ = 2500：f(x̄) = 1/6\nx̄ = 3000：f(x̄) = 2/6\n\n①所填的 x̄ 值為 1500（第一欄位）'
+        explanation: '【正確答案：✗ 錯】\n學會成立之初「並未設置理事長」，而是採集體領導的「理事會形式」來推動方向與會務。'
     },
     {
-        id: 'q_ch6_07_2',
-        category: '統計第六章',
-        questionText: '【民宿題組 (2)】承上題，抽樣分配表中②（x̄ = 2000 欄位的機率分子）為何？\n\n（x̄ = 2500 的 f(x̄) = 1/6 已知）',
+        id: 'lib_p1_tf_05',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】戰後中央圖書館遷台時，曾與故宮博物院等單位合併，復館時一開始先在植物園，後來才搬遷到霧峰北溝。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 1000' },
-            { id: 'opt_b', text: 'B. 1500' },
-            { id: 'opt_c', text: 'C. 2000' },
-            { id: 'opt_d', text: 'D. 4000' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
-        correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】X̄ = 2000\n\n六種組合分析：\n• AB → (1000+2000)/2 = 1500\n• AC → (1000+2000)/2 = 1500\n• AD → (1000+4000)/2 = 2500 ✓（題目已知 f=1/6）\n• BC → (2000+2000)/2 = 2000 ✓\n• BD → (2000+4000)/2 = 3000\n• CD → (2000+4000)/2 = 3000\n\n②的 x̄ 值（第二欄位）= 2000\nf(2000) = 1/6（只有 BC 這一種組合）'
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n地理遷徙順序顛倒了！中央圖書館遷台初期是先與故宮等單位合併落腳於「霧峰北溝」，之後才在台北「植物園」內借用台灣神社舊址復館。'
     },
     {
-        id: 'q_ch6_07_3',
-        category: '統計第六章',
-        questionText: '【民宿題組 (3)】承上題，抽樣分配表中③（x̄ = 2500 的機率）為何？',
+        id: 'lib_p1_tf_06',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】戰後政府原計畫在全台（北中南東）皆設立省立圖書館，但經過時代更迭，最終僅剩台北與台中的省立圖書館存活。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 1/6' },
-            { id: 'opt_b', text: 'B. 2/6' },
-            { id: 'opt_c', text: 'C. 3/6' },
-            { id: 'opt_d', text: 'D. 4/6' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】f(2500) = 1/6\n\n六種組合中，x̄ = 2500 只有一種：\n• AD：(1000+4000)/2 = 2500\n\n因此 f(2500) = 1/6\n\n完整抽樣分配：\n• f(1500) = 2/6（AB、AC）\n• f(2000) = 1/6（BC）\n• f(2500) = 1/6（AD）\n• f(3000) = 2/6（BD、CD）\n• 合計 = 6/6 = 1 ✓'
+        explanation: '【正確答案：○ 對】\n戰後政府曾規劃在全台多處設立省立圖書館，但經過體制精簡與歷史演變，最終僅存台北與台中兩座。'
     },
     {
-        id: 'q_ch6_07_4',
-        category: '統計第六章',
-        questionText: '【民宿題組 (4)】承上題，抽樣分配表中④（合計欄位的 f(x̄) 值）為何？',
+        id: 'lib_p1_tf_07',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】日治時期「臺灣總督府圖書館」的成立背景，最主要是依據 1923 年所制定的《公私立圖書館規則》。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. -1' },
-            { id: 'opt_b', text: 'B. 0' },
-            { id: 'opt_c', text: 'C. 1' },
-            { id: 'opt_d', text: 'D. 2' }
-        ],
-        correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】合計 = 1\n\n機率分配的基本性質：所有可能值的機率總和必須等於 1。\n\n驗算：\n2/6 + 1/6 + 1/6 + 2/6 = 6/6 = 1 ✓\n\n因此 ④ = 1'
-    },
-
-    // =====================================================================
-    // 統計第八章：假設檢定
-    // =====================================================================
-    {
-        id: 'q_ch8_01',
-        category: '統計第八章',
-        questionText: '考慮檢定的假設為 H₀: μ ≤ 21　H₁: μ ≥ 21，此檢定類型為何？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 左尾檢定' },
-            { id: 'opt_b', text: 'B. 右尾檢定' },
-            { id: 'opt_c', text: 'C. 雙尾檢定' },
-            { id: 'opt_d', text: 'D. 以上皆是' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】右尾檢定\n\n判斷方法（看 H₁ 的符號）：\n• H₁ 含「<」→ 左尾檢定（拒絕域在左方）\n• H₁ 含「>」→ 右尾檢定（拒絕域在右方）\n• H₁ 含「≠」→ 雙尾檢定（拒絕域在兩側）\n\n本題 H₁: μ ≥ 21，等同於 H₁: μ > 21，拒絕域落在右尾，故為右尾檢定。'
+        explanation: '【正確答案：✗ 錯】\n1923 年的《公私立圖書館規則》是用於規範常規公共圖書館。臺灣總督府圖書館屬於國立、國家級圖書館，它是依據總督府特別制定的「專屬館務規則」成立，非依據該公私立規則。'
     },
     {
-        id: 'q_ch8_02',
-        category: '統計第八章',
-        questionText: '考慮檢定的假設為 H₀: μ = 21　H₁: μ ≠ 21，則拒絕域應該是下列哪個圖形（兩側都有陰影區域）？',
+        id: 'lib_p1_tf_08',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】大學圖書館與中小學圖書館雖然都位於校園環境中，但在圖書館學分類上，兩者屬於完全不同的類別。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 左尾單側（左側陰影）' },
-            { id: 'opt_b', text: 'B. 右尾單側（右側陰影）' },
-            { id: 'opt_c', text: 'C. 雙尾（兩側皆有陰影）' },
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n大學圖書館被歸類為「學術圖書館」，而中小學圖書館則歸類為「學校圖書館」，兩者在服務對象與功能上有本質上的不同。'
+    },
+    {
+        id: 'lib_p1_tf_09',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】根據現行《大學法》的最新修正，大學圖書館館長已放寬限制，不再強制要求必須由圖書館專業教授或專家擔任。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n現階段的《大學法》早已將此限制修法拿掉，目前只要具備相關行政或學術人力資格者即可出任，不再硬性限制必須具備圖資學專業背景。'
+    },
+    {
+        id: 'lib_p1_tf_10',
+        category: '圖書館史-文字微調型',
+        questionText: '【是非題】各級政府機關常常因為內部業務或研究需要而設立專屬圖書館，這類圖書館在類別上應歸屬於「學術圖書館」。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n政府機關（如外交部、經濟部等）為了特定核心業務而成立的圖書館，其專業分類應屬於「專門圖書館」，並非學術圖書館。'
+    },
+    {
+        id: 'lib_p1_mc_01',
+        category: '圖書館史-文字微調型',
+        questionText: '民國時期在境外設立、且唯一具有官方或觀光性質的特殊圖書館為下列何者？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 國立羅斯福圖書館' },
+            { id: 'opt_b', text: 'B. 中國國際圖書館' },
+            { id: 'opt_b', text: 'C. 中德學會圖書館' },
+            { id: 'opt_d', text: 'D. 巴黎國際中國圖書館' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n中國國際圖書館是民國時期建立在境外（瑞士日內瓦）唯一具備觀光與官方地位的特殊文化機構。'
+    },
+    {
+        id: 'lib_p1_mc_02',
+        category: '圖書館史-文字微調型',
+        questionText: '現今的「中華民國圖書館學會」，在大陸時期的前身組織名稱是什麼？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 中華圖書館協會' },
+            { id: 'opt_b', text: 'B. 中華圖書協會' },
+            { id: 'opt_c', text: 'C. 中國圖書館學會' },
+            { id: 'opt_d', text: 'D. 中華民國圖書館協會' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n中華民國圖書館學會由大陸時期一路流傳過來，其最早在大陸創立時的組織名稱為「中華圖書館協會」。'
+    },
+    {
+        id: 'lib_p1_mc_03',
+        category: '圖書館史-文字微調型',
+        questionText: '下列哪一項「是」中華民國圖書館學會成立的核心宗旨與目的？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 促進出版商與書店的圖書販售' },
+            { id: 'opt_b', text: 'B. 壟斷圖書資訊教育市場' },
+            { id: 'opt_c', text: 'C. 研究圖書館制度與增進社會教育工作' },
             { id: 'opt_d', text: 'D. 以上皆是' }
         ],
         correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】雙尾檢定 → 拒絕域在兩側\n\nH₁: μ ≠ 21 表示「μ 不等於 21」，即 μ 可能大於或小於 21，因此拒絕域分布在常態分配的兩側尾部。\n\n顯著水準 α 平分為兩側，各為 α/2。\n例如 α = 0.05 時，拒絕域為 |Z| ≥ Z₀.₀₂₅ = 1.96'
+        explanation: '【正確答案：C】\n學會做為專業學術組織，核心任務包含研究體制、協助會員進修以及增進社會教育。促進圖書產品的「販售流通」並非其宗旨。'
     },
     {
-        id: 'q_ch8_03',
-        category: '統計第八章',
-        questionText: '考慮檢定的假設為 H₀: μ ≤ 21　H₁: μ ≥ 21，如果母體的平均數 μ = 23，則可能會發生哪一種誤差？',
+        id: 'lib_p1_mc_04',
+        category: '圖書館史-文字微調型',
+        questionText: '現今位於中永和地區的「國立臺灣圖書館」，其在日治時期的機關前身為何？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 型 I 誤差' },
-            { id: 'opt_b', text: 'B. 型 II 誤差' },
-            { id: 'opt_c', text: 'C. 型 I 與型 II 誤差都會發生' },
-            { id: 'opt_d', text: 'D. 型 I 與型 II 誤差都不會發生' }
-        ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】型 II 誤差\n\n分析：μ = 23 > 21，代表 H₀（μ ≤ 21）實際上是「錯的」。\n\n決策矩陣：\n　　　　　　　H₀真實狀況\n　　　　　H₀對　　H₀錯\n拒絕H₀　型I誤差　正確決策\n不拒絕H₀　正確　　型II誤差\n\n當 H₀ 是錯的：\n• 拒絕 H₀ → 正確決策\n• 不拒絕 H₀ → 型 II 誤差（漏判）\n\n因此可能發生型 II 誤差（無法發生型 I 誤差，因為型 I 誤差前提是 H₀ 為真）。'
-    },
-    {
-        id: 'q_ch8_04',
-        category: '統計第八章',
-        questionText: '下列對型 I 誤差的描述，何者正確？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 接受了錯的虛無假設 H₀' },
-            { id: 'opt_b', text: 'B. 拒絕了對的虛無假設 H₀' },
-            { id: 'opt_c', text: 'C. 接受了對的虛無假設 H₀' },
-            { id: 'opt_d', text: 'D. 拒絕了錯的虛無假設 H₀' }
-        ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】拒絕了對的虛無假設 H₀\n\n型 I 誤差（Type I Error / α 誤差）：\n→ H₀ 實際上是「對的」，但統計決策卻「拒絕 H₀」\n→ 又稱「棄真誤差」（冤枉了無辜者）\n→ 發生機率 = 顯著水準 α\n\n型 II 誤差（Type II Error / β 誤差）：\n→ H₀ 實際上是「錯的」，但統計決策卻「不拒絕 H₀」\n→ 又稱「取偽誤差」（放走了罪犯）\n→ 發生機率 = β'
-    },
-    {
-        id: 'q_ch8_05',
-        category: '統計第八章',
-        questionText: '如果一假設檢定的統計決策為拒絕虛無假設，則這個決策會？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 犯型 I 誤差' },
-            { id: 'opt_b', text: 'B. 犯型 II 誤差' },
-            { id: 'opt_c', text: 'C. 同時犯型 I 與型 II 誤差' },
-            { id: 'opt_d', text: 'D. 都不會犯錯' }
-        ],
-        correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】可能犯型 I 誤差\n\n當統計決策為「拒絕 H₀」時：\n• H₀ 是對的，卻拒絕 H₀ → 型 I 誤差（可能發生）\n• H₀ 是錯的，拒絕 H₀ → 正確決策（也可能是此情況）\n\n注意：「拒絕 H₀」這個決策只可能犯型 I 誤差，不可能犯型 II 誤差（型 II 誤差只在「不拒絕 H₀」時才可能發生）。'
-    },
-    {
-        id: 'q_ch8_06',
-        category: '統計第八章',
-        questionText: '中央氣象局於 2019 年 7 月 17 日早上 11:30 發布丹娜絲颱風的陸上颱風警報，對於是否要不要放颱風假經常是困擾各縣市市長的問題，有一假設如下：\n\nH₀：放颱風假　vs.　H₁：不放颱風假\n\n試問「該放假而沒放假」會犯何種錯誤？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 型 I 誤差' },
-            { id: 'opt_b', text: 'B. 型 II 誤差' },
-            { id: 'opt_c', text: 'C. 同時犯型 I 與型 II 誤差' },
-            { id: 'opt_d', text: 'D. 都不會犯錯' }
-        ],
-        correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】型 I 誤差\n\n情境分析：\n• H₀：放颱風假（代表「該放假」是正確的）\n• 「該放假而沒放假」= H₀ 是對的，但決策是「不放假」= 拒絕 H₀\n\n對照決策矩陣：\n→ H₀ 是對的 + 拒絕 H₀ = 型 I 誤差\n\n生活化理解：颱風確實很強（該放假），但市長決定不放假 → 冤枉了正確假設 → 型 I 誤差（棄真）'
-    },
-    {
-        id: 'q_ch8_07_1',
-        category: '統計第八章',
-        questionText: '【旅客停留天數題組 (1)】根據統計資料指出，2019 年來台旅客平均停留 6.39 天。為瞭解 2020 年是否有改變，在機場隨機抽取 144 位旅客，得平均停留天數 6.1 天，標準差 1.2 天（α = 0.05）。\n\n建立假設：H₀: μ = ①，H₁: μ ≠ ②\n\n請問 ① 與 ② 各為多少？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. ① = 6.1，② = 6.1' },
-            { id: 'opt_b', text: 'B. ① = 6.39，② = 6.1' },
-            { id: 'opt_c', text: 'C. ① = 6.39，② = 6.39' },
-            { id: 'opt_d', text: 'D. ① = 6.1，② = 6.39' }
+            { id: 'opt_a', text: 'A. 臺灣省立臺北圖書館' },
+            { id: 'opt_b', text: 'B. 國家圖書館臺灣分館' },
+            { id: 'opt_c', text: 'C. 臺灣總督府圖書館' },
+            { id: 'opt_d', text: 'D. 臺北州立圖書館' }
         ],
         correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】① = 6.39，② = 6.39\n\n假設建立原則：\n• H₀（虛無假設）：假設現狀不變，即 2020 年平均停留天數與 2019 年相同 → μ = 6.39\n• H₁（對立假設）：假設有改變（雙尾）→ μ ≠ 6.39\n\n注意：虛無假設使用歷史數據（6.39），而非樣本數據（6.1）。樣本數據是用來計算檢定統計量的，不能填入假設中。'
+        explanation: '【正確答案：C】\n國立臺灣圖書館（中永和四號公園內）具有悠久的血統，其最源頭的前身即為日治時期的最高國家級圖書館「臺灣總督府圖書館」。'
     },
     {
-        id: 'q_ch8_07_2',
-        category: '統計第八章',
-        questionText: '【旅客停留天數題組 (2)】承上題，計算 Z 檢定統計量：\n\nZ = (X̄ - μ₀) / (S/√n) = (6.1 - ①) / (1.2/√144) = ②\n\n請問 ① = ? ② = ?',
+        id: 'lib_p1_mc_05',
+        category: '圖書館史-文字微調型',
+        questionText: '戰後臺灣各地方公共圖書館在發展與評鑑時，最主要是參照下列哪一項法規或標準？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. ① = 6.1，② = 2.9' },
-            { id: 'opt_b', text: 'B. ① = 6.39，② = 2.9' },
-            { id: 'opt_c', text: 'C. ① = 6.39，② = -2.9' },
-            { id: 'opt_d', text: 'D. ① = 6.1，② = -2.9' }
+            { id: 'opt_a', text: 'A. 公共圖書館標準' },
+            { id: 'opt_b', text: 'B. 圖書館法' },
+            { id: 'opt_c', text: 'C. 公私立圖書館規則' },
+            { id: 'opt_d', text: 'D. 圖書館法施行細則' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n戰後初期臺灣地方公共圖書館之營運與硬體設施規範，主要是依循內政部確立的「公共圖書館標準」來推展發展方向。'
+    },
+    {
+        id: 'lib_p1_mc_06',
+        category: '圖書館史-文字微調型',
+        questionText: '知名歷史文人李敖在青年時期，曾經在哪一所學校的圖書館擔任過志工或職員？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 建國中學圖書館' },
+            { id: 'opt_b', text: 'B. 成功高中圖書館' },
+            { id: 'opt_c', text: 'C. 臺中一中圖書館' },
+            { id: 'opt_d', text: 'D. 高雄中學圖書館' }
         ],
         correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】① = 6.39，② = -2.9\n\n計算過程：\nn = 144，X̄ = 6.1，S = 1.2，μ₀ = 6.39\n\nZ = (6.1 - 6.39) / (1.2/√144)\n  = -0.29 / (1.2/12)\n  = -0.29 / 0.1\n  = -2.9\n\n① 填入的是 H₀ 的參數值 μ₀ = 6.39\n② 計算結果 Z = -2.9\n\n|Z| = |-2.9| = 2.9 ≥ 1.96（Z₀.₀₂₅），落入拒絕域。'
+        explanation: '【正確答案：C】\n李敖於高中求學階段，曾在「臺中一中圖書館」裡廣泛閱讀並擔任圖書館助理與志工。'
     },
     {
-        id: 'q_ch8_07_3',
-        category: '統計第八章',
-        questionText: '【旅客停留天數題組 (3)】承上題，雙尾檢定拒絕域為 R = {|Z| ≥ Z₀.₀₂₅ = 1.96}，計算得 Z = -2.9，統計決策為何？',
+        id: 'lib_p1_mc_07',
+        category: '圖書館史-文字微調型',
+        questionText: '戒嚴時期台灣實施資訊管制，當時知識青年若想閱讀、取得最新的國外第一手英文資訊與期刊，最主要的合法管道是去哪裡？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. Reject H₀（拒絕虛無假設）' },
-            { id: 'opt_b', text: 'B. Do Not Reject H₀（不拒絕虛無假設）' }
+            { id: 'opt_a', text: 'A. 國家圖書館' },
+            { id: 'opt_b', text: 'B. 美新處圖書館' },
+            { id: 'opt_c', text: 'C. 中研院圖書館' },
+            { id: 'opt_d', text: 'D. 中國國際圖書館' }
         ],
-        correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】Reject H₀\n\n判斷依據：\n|Z| = |-2.9| = 2.9 ≥ 1.96\n→ 檢定統計量落入拒絕域\n→ 統計決策：Reject H₀\n\n注意：我們比較的是 |Z| 的絕對值與臨界值 1.96，因為雙尾檢定兩側都是拒絕域。'
+        correctOptionId: 'opt_b',
+        explanation: ' = ' + '【正確答案：B】\n在戒嚴與思想控制時期，由美國官方設立的「美新處圖書館」（美國新聞處）成為了台灣學者與知識學子繞過封鎖、汲取國際前沿科技與第一手外文書刊最重要的庇護所。'
     },
     {
-        id: 'q_ch8_07_4',
-        category: '統計第八章',
-        questionText: '【旅客停留天數題組 (4)】承上題，在顯著水準 α = 0.05 下，根據樣本資料，今年來台旅客在台平均停留天數與去年____顯著差異。',
+        id: 'lib_p1_mc_08',
+        category: '圖書館史-文字微調型',
+        questionText: '萬有文庫因購書即附分類號與目錄卡，一買就能直接成立圖書館，這種奇特現象在課堂上被老師稱之為何？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 存在' },
-            { id: 'opt_b', text: 'B. 不存在' }
+            { id: 'opt_a', text: 'A. 媒體化現象' },
+            { id: 'opt_b', text: 'B. 規格化現象' },
+            { id: 'opt_c', text: 'C. 罐頭化現象' },
+            { id: 'opt_d', text: 'D. 專業化現象' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】\n商務印書館印製的《萬有文庫》因高度標準化、買書隨附卡片及索書號，造成全台與全國各地「放一套書即可成立圖書館」的現象，老師特別將此命名為「罐頭化現象」。這個冷知識在一般 Google 上是搜尋不到的。'
+    },
+    {
+        id: 'lib_p1_mc_09',
+        category: '圖書館史-文字微調型',
+        questionText: '武俠小說大師「金庸」在早年行跡中，曾經擔任過下列哪一個機構的館員？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 國家圖書館' },
+            { id: 'opt_b', text: 'B. 臺灣總督府圖書館' },
+            { id: 'opt_c', text: 'C. 國立臺灣圖書館' },
+            { id: 'opt_d', text: 'D. 中國國際圖書館' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】存在顯著差異\n\n結論撰寫格式：\n在顯著水準 α = 0.05 下，根據樣本資料，我們有充分的證據來證明，今年來台旅客在台平均停留天數與去年「存在」顯著差異。\n\n邏輯：因為 Reject H₀（H₀ 表示無差異），所以結論是「有差異存在」。\n\n記憶技巧：\n• 拒絕 H₀ → 支持 H₁ → H₁ 說有差異 → 結論：有差異\n• 不拒絕 H₀ → H₀ 說無差異 → 結論：無差異（或證據不足）'
+        explanation: '【正確答案：A】\n武俠大師金庸（查良鏞）早年在前往香港前，曾經在「國家圖書館」（當時的中央圖書館）內擔任低調的常規館員。'
+    },
+    {
+        id: 'lib_p1_mc_10',
+        category: '圖書館史-文字微調型',
+        questionText: '課堂上老師提到，他在國立臺灣圖書館所辦理的個人借書證，被賦予了什麼特別的名稱？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 知識的入場券' },
+            { id: 'opt_b', text: 'B. 南島的知識巡禮' },
+            { id: 'opt_c', text: 'C. 戰後臺灣圖書館發展' },
+            { id: 'opt_d', text: 'D. 圖書館通行證' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n老師特別提到，他在國立臺灣圖書館所申辦的借書證，給它取了一個非常獨特且具文藝感的名稱，叫做「知識的入場券」。'
     },
 
     // =====================================================================
-    // 統計第十章：卡方檢定
+    // 圖書館史：第二份（觀念反轉型）
     // =====================================================================
     {
-        id: 'q_ch10_01',
-        category: '統計第十章',
-        questionText: '有一位心理醫師要研究「不同性別（男、女）與是否有睡眠困擾（有、沒有）之間的關係」，請問他要採用何種統計方法？',
+        id: 'lib_p2_tf_01',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】中國國際圖書館在民國 80 年代最終落腳於臺灣圖書館，其最初是在日內瓦成立，中途曾遷往烏拉圭。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 卡方檢定' },
-            { id: 'opt_b', text: 'B. 變異數分析' },
-            { id: 'opt_c', text: 'C. 迴歸分析' },
-            { id: 'opt_d', text: 'D. 以上皆可' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n反轉反思題：該圖書館最終並非落腳於臺灣圖書館，而是落腳落籍於「國家圖書館」。'
+    },
+    {
+        id: 'lib_p2_tf_02',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】中華民國圖書館學會與專業人才、知識體系、社會價值、倫理守則等，共同並列為圖書館專業構成的關鍵要素。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】卡方檢定（獨立性檢定）\n\n判斷方法：\n• 性別（男/女）→ 類別變數\n• 睡眠困擾（有/沒有）→ 類別變數\n\n兩個類別變數間的關係 → 卡方獨立性檢定（Chi-Square Test of Independence）\n\n統計方法選擇口訣：\n• 兩類別變數關係 → 卡方獨立性檢定\n• 類別 vs 數值 → 變異數分析（ANOVA）\n• 兩數值變數關係 → 迴歸分析或相關分析'
+        explanation: '【正確答案：○ 對】\n觀念釐清：圖書館學會本身作為核心專業團體，確實與專業人才、知識、社會倫理等項目共同構成其專業制度的支柱。'
     },
     {
-        id: 'q_ch10_02',
-        category: '統計第十章',
-        questionText: '有一位米其林餐廳的管理階層想要知道「消費者的消費金額（元）與職業是否有關係」，請問他要採用何種統計方法？',
+        id: 'lib_p2_tf_03',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】民國 42 年在臺灣設置的「圖書資訊教育學會」，其本質是為了恢復大陸時期的舊有組織，藉此促進兩岸交流。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 卡方檢定' },
-            { id: 'opt_b', text: 'B. 變異數分析' },
-            { id: 'opt_c', text: 'C. 迴歸分析' },
-            { id: 'opt_d', text: 'D. 以上皆可' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】變異數分析（ANOVA）\n\n判斷方法：\n• 消費金額（元）→ 連續數值變數\n• 職業 → 類別變數（多個組別）\n\n一個數值變數 + 一個多組類別變數 → 單因子變異數分析（One-Way ANOVA）\n\n目的：檢定不同職業群體的平均消費金額是否有顯著差異。'
+        explanation: '【正確答案：✗ 錯】\n反轉陷阱：用來恢復大陸時期血統組織的叫做「中華民國圖書館學會」；而「圖書資訊教育學會」則是為後來因應時代、為了彈性推動兩岸交流而新成立的全新學會。'
     },
     {
-        id: 'q_ch10_03',
-        category: '統計第十章',
-        questionText: '卡方檢定屬於何種類型的檢定？',
+        id: 'lib_p2_tf_04',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】中華民國圖書館學會於創立初期，採取的是「理事會形式」來推動會務與決定發展方向，當時並未選出單一理事長。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 左尾檢定' },
-            { id: 'opt_b', text: 'B. 右尾檢定' },
-            { id: 'opt_c', text: 'C. 雙尾檢定' },
-            { id: 'opt_d', text: 'D. 以上皆可' }
-        ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】右尾檢定\n\n原因：\n卡方統計量 χ² = Σ[(O - E)² / E]，因為分子是平方，χ² 值恆為非負數（≥ 0）。\n\n• 當觀察值與期望值差異越大 → χ² 越大 → 拒絕 H₀\n• 因此拒絕域永遠在右尾（χ² 值越大越可疑）\n\n卡方分配的特性：不對稱，偏右，只有右尾拒絕域。'
-    },
-    {
-        id: 'q_ch10_04',
-        category: '統計第十章',
-        questionText: '適合度檢定要檢定的參數為何？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 平均數' },
-            { id: 'opt_b', text: 'B. 變異數' },
-            { id: 'opt_c', text: 'C. 標準差' },
-            { id: 'opt_d', text: 'D. 比例' }
-        ],
-        correctOptionId: 'opt_d',
-        explanation: '【正確答案：D】比例\n\n適合度檢定（Goodness-of-Fit Test）：\n→ 檢定各類別的觀察次數分配是否符合某個理論機率分配\n→ 本質上是在檢定各類別的「比例（機率）」\n\n例如：檢定骰子是否公平 → H₀: P₁ = P₂ = ... = P₆ = 1/6\n\n與獨立性檢定的區別：\n• 適合度檢定：一個類別變數 vs 理論分配\n• 獨立性檢定：兩個類別變數之間的關聯性'
-    },
-    {
-        id: 'q_ch10_05',
-        category: '統計第十章',
-        questionText: '何種類型的資料可以使用卡方檢定來進行分析？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 類別資料' },
-            { id: 'opt_b', text: 'B. 連續資料' },
-            { id: 'opt_c', text: 'C. 離散資料' },
-            { id: 'opt_d', text: 'D. 以上均可' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】類別資料\n\n卡方檢定專門用於分析「類別資料（Categorical Data）」的次數分配。\n\n適用情境：\n• 適合度檢定：單一類別變數的分配是否符合理論\n• 獨立性檢定：兩個類別變數是否相互獨立\n\n注意：若資料是連續或離散的數值資料，需先分組轉換為類別資料，才能使用卡方檢定。'
+        explanation: '【正確答案：○ 對】\n完全正確。初期沒有單一理事長，全權由理事會推展會務架構。'
     },
     {
-        id: 'q_ch10_06',
-        category: '統計第十章',
-        questionText: '卡方檢定中，每個格子內的期望次數至少要多少以上才是有效的檢定？',
+        id: 'lib_p2_tf_05',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】戰後國家圖書館（中央圖書館）遷台初期，曾暫時與故宮博物院等單位合併，並首先在霧峰北溝落腳。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 2' },
-            { id: 'opt_b', text: 'B. 3' },
-            { id: 'opt_c', text: 'C. 4' },
-            { id: 'opt_d', text: 'D. 5' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
-        correctOptionId: 'opt_d',
-        explanation: '【正確答案：D】每格期望次數 ≥ 5\n\n卡方檢定的基本假設：每個格子（cell）的期望次數（Expected Count）必須 ≥ 5。\n\n若不滿足此條件：\n• 卡方近似效果差\n• 需合併相鄰類別，或改用 Fisher精確檢定（Fisher\'s Exact Test）\n\n期望次數計算公式：\nE = （該列合計 × 該行合計）/ 總合計'
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n歷史事實無誤。遷台第一站正是與故宮等國寶機構一起存放於台中霧峰北溝防空與隱密山區。'
     },
     {
-        id: 'q_ch10_07_1',
-        category: '統計第十章',
-        questionText: '【台北通勤題組 (1)】為了解台北市市民每天通勤交通工具的分配狀況，調查 1,200 個樣本，得：捷運 512、公車 99、計程車 43、機車 292、自用小客車 215、其他 39。\n\n若要檢定市民通勤交通工具是否有差異，每個格子應該發生的機率為何？',
+        id: 'lib_p2_tf_06',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】戰後政府原本企圖在北、中、南、東四區都保留省立圖書館，但最後只有台北與台南成功存活下來。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 1/3' },
-            { id: 'opt_b', text: 'B. 1/4' },
-            { id: 'opt_c', text: 'C. 1/5' },
-            { id: 'opt_d', text: 'D. 1/6' }
-        ],
-        correctOptionId: 'opt_d',
-        explanation: '【正確答案：D】1/6\n\n在「無差異」的虛無假設下，每種交通工具被選擇的機率應相等。\n\n共有 6 種交通工具（捷運、公車、計程車、機車、自用小客車、其他）\n\n→ H₀: P₁ = P₂ = P₃ = P₄ = P₅ = P₆ = 1/6\n\n這是適合度檢定的基本設定。'
-    },
-    {
-        id: 'q_ch10_07_2',
-        category: '統計第十章',
-        questionText: '【台北通勤題組 (2)】承上題，若要檢定市民通勤交通工具是否有差異，每個格子應發生的期望次數為何？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 100' },
-            { id: 'opt_b', text: 'B. 200' },
-            { id: 'opt_c', text: 'C. 300' },
-            { id: 'opt_d', text: 'D. 400' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
         ],
         correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】每格期望次數 = 200\n\n計算公式：期望次數 = 理論機率 × 總樣本數\n\nE = (1/6) × 1200 = 200\n\n驗算：6 格 × 200 = 1200（等於總樣本數）✓'
+        explanation: '【正確答案：✗ 錯】\n反轉陷阱：最後生存下來的省立圖書館只有「台北與台中」，台南並未存活保留。'
     },
     {
-        id: 'q_ch10_07_3',
-        category: '統計第十章',
-        questionText: '【台北通勤題組 (3)】承上題，若要檢定市民通勤交通工具是否有差異，則檢定的自由度為何？',
+        id: 'lib_p2_tf_07',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】1923 年制定的《公私立圖書館規則》主要是用來規範一般「公共圖書館」的成立，而非國立的「臺灣總督府圖書館」。',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 3' },
-            { id: 'opt_b', text: 'B. 4' },
-            { id: 'opt_c', text: 'C. 5' },
-            { id: 'opt_d', text: 'D. 6' }
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n正確。臺灣總督府圖書館是依據其位階之專屬政府條例成立，而非依據 1923 年面向普通公私立大眾圖書館的法規。'
+    },
+    {
+        id: 'lib_p2_tf_08',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】大學圖書館與中小學圖書館雖然都位於校園內，因為分別屬於「學術圖書館」與「學校圖書館」，所以類別不同。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n完全正確。雖然同在教育校園中，但大學圖書館被正式劃分為「學術圖書館」類別。'
+    },
+    {
+        id: 'lib_p2_tf_09',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】依照現行的《大學法》規定，若非圖書館學專業的教授或專家，絕對依法不能被聘任為大學圖書館館長。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n反轉陷阱：現行《大學法》已經「放寬修掉」這項硬性限制，非法定必須由圖資系背景者才能當館長。'
+    },
+    {
+        id: 'lib_p2_tf_10',
+        category: '圖書館史-觀念反轉型',
+        questionText: '【是非題】政府機關常為了特定業務所需成立圖書館，這種具備特定讀者與專業學科性質的圖書館，在類別上稱之為「專門圖書館」。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n概念明晰：政府內設業務單位圖書館均為標準的「專門圖書館」。'
+    },
+    {
+        id: 'lib_p2_mc_01',
+        category: '圖書館史-觀念反轉型',
+        questionText: '關於民國時期「中國國際圖書館」的歷史流轉敘述，下列何者正確？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 成立於烏拉圭' },
+            { id: 'opt_b', text: 'B. 境外唯一具官方/觀光性質' },
+            { id: 'opt_c', text: 'C. 最後落腳台中' },
+            { id: 'opt_d', text: 'D. 以上皆非' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n它是成立於日內瓦（非烏拉圭），中途輾轉搬去烏拉圭，最後在民國 80 年代落腳在台北的國家圖書館，具備境外唯一官方觀光性質。'
+    },
+    {
+        id: 'lib_p2_mc_02',
+        category: '圖書館史-觀念反轉型',
+        questionText: '「中華圖書館協會」是台灣哪一個現存圖書館相關學會的「在大陸時期前身」？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 圖書資訊教育學會' },
+            { id: 'opt_b', text: 'B. 中華民國圖書館學會' },
+            { id: 'opt_c', text: 'C. 臺灣圖書館學會' },
+            { id: 'opt_d', text: 'D. 中國圖書資訊學會' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n中華圖書館協會來到台灣之後復會，即成了現今著名的「中華民國圖書館學會」。'
+    },
+    {
+        id: 'lib_p2_mc_03',
+        category: '圖書館史-觀念反轉型',
+        questionText: '老師提到圖書館學會有其核心任務，以下哪一項「不屬於」其成立的目的？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 增進社會教育工作' },
+            { id: 'opt_b', text: 'B. 拓展圖書零售與販售通路' },
+            { id: 'opt_c', text: 'C. 協助會員進修' },
+            { id: 'opt_d', text: 'D. 研究圖書館制度' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n圖書館學會絕非商業盈利機構，因此不具備幫出版商「進行圖書市場販售與拓展通路」的核心責任。'
+    },
+    {
+        id: 'lib_p2_mc_04',
+        category: '圖書館史-觀念反轉型',
+        questionText: '日治時期的「臺灣總督府圖書館」在戰後幾經更名與遷徙，現為下列哪一個圖書館？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 國立臺灣圖書館' },
+            { id: 'opt_b', text: 'B. 國家圖書館' },
+            { id: 'opt_c', text: 'C. 臺灣省立臺北圖書館' },
+            { id: 'opt_d', text: 'D. 國家圖書館臺灣分館' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n臺灣總督府圖書館戰後改組為省立臺北圖書館，後更名國立中央圖書館臺灣分館，現已正式定名為「國立臺灣圖書館」。'
+    },
+    {
+        id: 'lib_p2_mc_05',
+        category: '圖書館史-觀念反轉型',
+        questionText: '戰後台灣地方公共圖書館的發展藍圖與設立依據，最主要是依循下列哪一項制度標準確立的？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 圖書館法施行細則' },
+            { id: 'opt_b', text: 'B. 公私立圖書館規則' },
+            { id: 'opt_c', text: 'C. 公共圖書館標準' },
+            { id: 'opt_d', text: 'D. 臺灣省各縣市圖書館規則' }
         ],
         correctOptionId: 'opt_c',
-        explanation: '【正確答案：C】自由度 = 5\n\n適合度檢定自由度公式：df = k - 1（k = 類別數）\n\ndf = 6 - 1 = 5\n\n記憶方式：有 6 格，知道前 5 格的數量，最後 1 格就自動決定了（因為總和固定），所以自由度 = 6 - 1 = 5。'
+        explanation: '【正確答案：C】\n戰後地方公共圖書館發展制度與法源建設，其核心基石為「公共圖書館標準」。'
     },
     {
-        id: 'q_ch10_08',
-        category: '統計第十章',
-        questionText: '一獨立性檢定的列聯表中共有 3 列 4 行，試問其自由度為何？',
+        id: 'lib_p2_mc_06',
+        category: '圖書館史-觀念反轉型',
+        questionText: '課堂上提到，臺灣文壇奇才李敖曾在高中時期，於哪一個圖書館當過職員或志工？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 3' },
-            { id: 'opt_b', text: 'B. 6' },
-            { id: 'opt_c', text: 'C. 9' },
-            { id: 'opt_d', text: 'D. 12' }
-        ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】自由度 = 6\n\n獨立性檢定自由度公式：df = (r-1)(c-1)\n其中 r = 列數（rows），c = 行數（columns）\n\ndf = (3-1)(4-1) = 2 × 3 = 6\n\n與適合度檢定自由度的區別：\n• 適合度檢定：df = k - 1\n• 獨立性檢定：df = (r-1)(c-1)'
-    },
-    {
-        id: 'q_ch10_09_1',
-        category: '統計第十章',
-        questionText: '【觀光局旅客目的題組 (1)】觀光局指出外國旅客來台目的比例為觀光:商務:探親 = 8:1:1。在機場對 1,000 位旅客調查，觀察次數：觀光 780、業務 120、探視 100；期望次數：觀光 800、業務 100、探視 100。（α = 0.05）\n\n建立假設，自由度 df = ?',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. 1' },
-            { id: 'opt_b', text: 'B. 2' },
-            { id: 'opt_c', text: 'C. 3' },
-            { id: 'opt_d', text: 'D. 9' }
-        ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】df = 2\n\n假設設定：\nH₀: P₁ = 0.8, P₂ = 0.1, P₃ = 0.1（符合 8:1:1）\nH₁: H₀ 為錯\n顯著水準 α = 0.05\n\n自由度計算（適合度檢定）：\ndf = k - 1 = 3 - 1 = 2（共 3 種目的類別）\n\n拒絕域：R = {χ² ≥ χ²₀.₀₅(2) = 5.991}'
-    },
-    {
-        id: 'q_ch10_09_2',
-        category: '統計第十章',
-        questionText: '【觀光局旅客目的題組 (2)】承上題，χ² = 4.5，小於臨界值 5.991，統計決策為？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. Reject H₀（拒絕虛無假設）' },
-            { id: 'opt_b', text: 'B. Do Not Reject H₀（不拒絕虛無假設）' }
-        ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】Do Not Reject H₀\n\n判斷：\nχ² = 4.5 < χ²₀.₀₅(2) = 5.991\n→ 未落入拒絕域\n→ 統計決策：Do Not Reject H₀\n\n結論：在顯著水準 α = 0.05 下，顯示歷年探親比例很可能就是 8:1:1，代表觀光局的說法很可能是對的。（○）'
-    },
-    {
-        id: 'q_ch10_09_3',
-        category: '統計第十章',
-        questionText: '【觀光局旅客目的題組 (4)】承上題，在顯著水準 α = 0.05 下，根據結果，結論為下列何者正確？',
-        image: null,
-        options: [
-            { id: 'opt_a', text: 'A. ○（顯示歷年探親比例很可能就是 8:1:1，觀光局說法很可能是對的）' },
-            { id: 'opt_b', text: 'B. ✗（有足夠證據推翻觀光局說法）' }
+            { id: 'opt_a', text: 'A. 臺中一中圖書館' },
+            { id: 'opt_b', text: 'B. 成功高中圖書館' },
+            { id: 'opt_c', text: 'C. 建國中學圖書館' },
+            { id: 'opt_d', text: 'D. 師大附中圖書館' }
         ],
         correctOptionId: 'opt_a',
-        explanation: '【正確答案：A】○\n\n邏輯推演：\n• 統計決策：Do Not Reject H₀\n• H₀ 代表：旅客目的比例符合 8:1:1\n• 不拒絕 H₀ → 沒有足夠證據推翻 8:1:1 的說法\n• 結論：觀光局的說法很可能是對的 ✓\n\n注意：「不拒絕 H₀」不等於「H₀ 一定正確」，只是「證據不足以推翻 H₀」。'
+        explanation: '【正確答案：A】\n歷史名人李敖年輕在台求學時，足跡深留於「臺中一中圖書館」。'
     },
     {
-        id: 'q_ch10_10_1',
-        category: '統計第十章',
-        questionText: '【反送中學歷題組 (1)】2019 年進行 1,000 位樣本的民意調查（學歷 vs 對反送中的看法）：\n高中以下：贊成 140、反對 60（合計 200）\n大專大學：贊成 460、反對 40（合計 500）\n研究所以上：贊成 250、反對 50（合計 300）\n\n拒絕域為 R = {χ² ≥ χ²₀.₀₅(df) = 5.991}，df（自由度）= ？',
+        id: 'lib_p2_mc_07',
+        category: '圖書館史-觀念反轉型',
+        questionText: '戒嚴時期的臺灣知識分子，若想跨越管制翻閱國外最新的期刊與第一手科技資料，最普遍且合法的管道是去哪裡？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. 1' },
-            { id: 'opt_b', text: 'B. 2' },
-            { id: 'opt_c', text: 'C. 5' },
-            { id: 'opt_d', text: 'D. 6' }
+            { id: 'opt_a', text: 'A. 中研院圖書館' },
+            { id: 'opt_b', text: 'B. 國家圖書館' },
+            { id: 'opt_c', text: 'C. 美新處圖書館' },
+            { id: 'opt_d', text: 'D. 台灣大學圖書館' }
         ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】df = 2\n\n此為獨立性檢定（兩個類別變數：學歷 × 看法）\n\n列聯表大小：3 列（高中以下、大專大學、研究所以上）× 2 行（贊成、反對）\n\ndf = (r-1)(c-1) = (3-1)(2-1) = 2 × 1 = 2\n\n拒絕域：R = {χ² ≥ χ²₀.₀₅(2) = 5.991}'
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】\n美新處（美國新聞處）圖書館在戒嚴思想管制時代，是台灣學子探索西方第一手原文書籍與學術思想的關鍵綠洲。'
     },
     {
-        id: 'q_ch10_10_2',
-        category: '統計第十章',
-        questionText: '【反送中學歷題組 (2)】承上題，χ² = 55.1634，大於臨界值 5.991，統計決策為？',
+        id: 'lib_p2_mc_08',
+        category: '圖書館史-觀念反轉型',
+        questionText: '商務印書館所印製的《萬有文庫》，因為附帶索書號與目錄卡，造成當時全國圖書館數量難以精準統計的現象。這被稱之為什麼？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. Do Not Reject H₀（不拒絕虛無假設）' },
-            { id: 'opt_b', text: 'B. Reject H₀（拒絕虛無假設）' }
+            { id: 'opt_a', text: 'A. 罐頭化現象' },
+            { id: 'opt_b', text: 'B. 媒體化現象' },
+            { id: 'opt_c', text: 'C. 規格化現象' },
+            { id: 'opt_d', text: 'D. 泡沫化現象' }
         ],
-        correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】Reject H₀\n\n判斷：\nχ² = 55.1634 > χ²₀.₀₅(2) = 5.991\n→ 落入拒絕域\n→ 統計決策：Reject H₀\n\n這個 χ² 值非常大（遠超臨界值），表示觀察值與期望值差異極為顯著。'
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n因為買一套《萬有文庫》即能在地方直接宣告開館，導致統計數據嚴重失真，此現象被特別定義為「罐頭化現象」。'
     },
     {
-        id: 'q_ch10_10_3',
-        category: '統計第十章',
-        questionText: '【反送中學歷題組 (3)】承上題，Reject H₀，結論為「民眾對反送中的看法，跟學歷____」，下列何者正確？',
+        id: 'lib_p2_mc_09',
+        category: '圖書館史-觀念反轉型',
+        questionText: '寫出《天龍八部》、《笑傲江湖》的著名文學家金庸，早年曾經在下列何處擔任過館員？',
         image: null,
         options: [
-            { id: 'opt_a', text: 'A. ○（跟學歷有關）' },
-            { id: 'opt_b', text: 'B. ✗（跟學歷無關）' }
+            { id: 'opt_a', text: 'A. 臺灣總督府圖書館' },
+            { id: 'opt_b', text: 'B. 國家圖書館' },
+            { id: 'opt_c', text: 'C. 中研院歷史語言研究所' },
+            { id: 'opt_d', text: 'D. 中國國際圖書館' }
         ],
         correctOptionId: 'opt_b',
-        explanation: '【正確答案：B】✗ ← 題目結論敘述有誤！\n\n重要澄清：\n• H₀：民眾對反送中的看法跟學歷「無關」\n• H₁：民眾對反送中的看法跟學歷「有關」\n• 統計決策：Reject H₀\n• → 正確結論應該是：跟學歷「有關」\n\n本題考的是：題目中給出的結論敘述「跟學歷無關」是對（○）還是錯（✗）？\n→ 因為我們拒絕 H₀，代表「有關」，所以「無關」的敘述是錯的 → 答案選 B（✗）'
+        explanation: '【正確答案：B】\n金庸在去香港發展前，曾在國立中央圖書館（現中華民國國家圖書館）內擔任圖書館館員助理。'
+    },
+    {
+        id: 'lib_p2_mc_10',
+        category: '圖書館史-觀念反轉型',
+        questionText: '老師在國立臺灣圖書館辦理的借書證名稱非常特別，下列何者才是正確的名稱？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 南島的知識巡禮' },
+            { id: 'opt_b', text: 'B. 戰後臺灣圖書館發展' },
+            { id: 'opt_c', text: 'C. 圖書館通行證' },
+            { id: 'opt_d', text: 'D. 知識的入場券' }
+        ],
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】\n老師擁有的那張特別借書證名字就叫做「知識的入場券」。'
+    },
+
+    // =====================================================================
+    // 圖書館史：第三份（終極混亂型 - 1:1 交織編排）
+    // =====================================================================
+    {
+        id: 'lib_p3_tf_01',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/原始】民國時期中國國際圖書館成立於日內瓦，的確它成立於日內瓦，然後輾轉到了烏拉圭，最後，在民國 80 年代落腳，就是在台灣圖書館。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n原始考題重現：注意它最終是落腳在「國家圖書館」，不是台灣圖書館。'
+    },
+    {
+        id: 'lib_p3_tf_02',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/變形】中華民國圖書館學會與專業人才培育、知識體系、社會價值、倫理守則，共同並列為圖書館專業構成的關鍵要素。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n完全正確。專業學會是我國圖書館專業領域構成的五大核心基礎之一。'
+    },
+    {
+        id: 'lib_p3_tf_03',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/原始】圖書資訊教育學會在民國 42 年設置在性質上並非成立，而是恢復大陸時期的組織，對還是錯。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n原始考點：性質上屬於「恢復大陸時期既有組織」的，應為「中華民國圖書館學會」，而非圖書資訊教育學會。'
+    },
+    {
+        id: 'lib_p3_tf_04',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/變形】中華民國圖書館學會創立初期，是以「理事會」的形式推動會務方向，當時並未設置理事長一人負責領導。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n文字變形正確。創立初期採行的是民主式理事會制，並非一開始就設立個人理事長職位。'
+    },
+    {
+        id: 'lib_p3_tf_05',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/原始】國家圖書館戰後遷台，一開始先落腳在這個霧峰的北溝，然後後面在這個植物園裡面，日治時期的台灣神社舊址復館。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n原始課程細節：國圖遷台第一步先去霧峰北溝山區與故宮文物儲放，之後遷入台北植物園內借用日治神社復館。'
+    },
+    {
+        id: 'lib_p3_tf_06',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/變形】戰後政府原計畫在全台（北、中、南、東）設立省立圖書館，但最終演變下來，僅剩臺北與臺南兩座圖書館留存。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n混淆陷阱：最後留存的是台北與「台中」，而非臺南！'
+    },
+    {
+        id: 'lib_p3_tf_07',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/原始】日治時期，臺灣總督府圖書館的成立是依據 1923 年所制定的公私立圖書館規則，對還是錯。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n原始核心：臺灣總督府圖書館是依照總督府本身的高階專屬法律條例設立，不是依據 1923 年普通的公私立規則。'
+    },
+    {
+        id: 'lib_p3_tf_08',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/變形】大學圖書館屬於學術圖書館，中小學圖書館屬於學校圖書館，雖然兩者都在校園內，但在圖書館學的分類上是完全不同的類別。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：○ 對】\n完全正確。雖然同屬教學場所，但在圖書館專業分類上：大學屬於「學術」、中小學屬於「學校」。'
+    },
+    {
+        id: 'lib_p3_tf_09',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/原始】現階段大學法明確規定，大學圖書館必須由圖書館專業教授或專家擔任館長，對還是錯。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n原始法規更迭：現行法已修訂放寬，不需要具備圖資系專家或教授背景即可出任館長。'
+    },
+    {
+        id: 'lib_p3_tf_10',
+        category: '圖書館史-終極混亂型',
+        questionText: '【是非題/變形】各級政府機關常因內部業務或研究需要而設立專屬圖書館，此類圖書館在專業分類上應歸類為「學術圖書館」。',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. ○ 對' },
+            { id: 'opt_b', text: 'B. ✗ 錯' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：✗ 錯】\n概念強化：機關單位的圖書館一律屬於「專門圖書館」，非學術圖書館。'
+    },
+    {
+        id: 'lib_p3_mc_01',
+        category: '圖書館史-終極混亂型',
+        questionText: '【變形題】民國時期在境外設立、且唯一具有官方或觀光性質的特殊圖書館為下列何者？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 國立中央圖書館' },
+            { id: 'opt_b', text: 'B. 國立羅斯福圖書館' },
+            { id: 'opt_c', text: 'C. 中國國際圖書館' },
+            { id: 'opt_d', text: 'D. 中德學會圖書館' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】\n混亂編排下的境外傳奇機構為「中國國際圖書館」。'
+    },
+    {
+        id: 'lib_p3_mc_02',
+        category: '圖書館史-終極混亂型',
+        questionText: '【原始題】中華民國圖書館學會於民國時期的前身為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 中華圖書館協會' },
+            { id: 'opt_b', text: 'B. 中華圖書協會' },
+            { id: 'opt_c', text: 'C. 中華民國圖書館協會' },
+            { id: 'opt_d', text: 'D. 中國圖書館學會' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n原始考卷原題：前身組織正是「中華圖書館協會」。'
+    },
+    {
+        id: 'lib_p3_mc_03',
+        category: '圖書館史-終極混亂型',
+        questionText: '【變形題】老師提到圖書館學會有其核心任務，以下哪一項「不屬於」其成立的目的？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 增進社會教育工作' },
+            { id: 'opt_b', text: 'B. 拓展圖書零售與販售通路' },
+            { id: 'opt_c', text: 'C. 協助會員進修' },
+            { id: 'opt_d', text: 'D. 研究圖書館制度' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n學會是學術公益組織，絕不以「書籍販售或推廣通路零售」為成立宗旨。'
+    },
+    {
+        id: 'lib_p3_mc_04',
+        category: '圖書館史-終極混亂型',
+        questionText: '【原始題】以下哪一個圖書館為國立臺灣圖書館的前身？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 臺灣省立臺北圖書館' },
+            { id: 'opt_b', text: 'B. 臺灣總督府圖書館' },
+            { id: 'opt_c', text: 'C. 國家圖書館臺灣分館' },
+            { id: 'opt_d', text: 'D. 以上皆是' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n歷史起源題：最主要也最具代表性的起源前身是日治時期的「臺灣總督府圖書館」。'
+    },
+    {
+        id: 'lib_p3_mc_05',
+        category: '圖書館史-終極混亂型',
+        questionText: '【變形題】戰後台灣地方公共圖書館的發展藍圖與設立依據，最主要是依循下列哪一項制度標準確立的？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 圖書館法' },
+            { id: 'opt_b', text: 'B. 公私立圖書館規則' },
+            { id: 'opt_c', text: 'C. 公共圖書館標準' },
+            { id: 'opt_d', text: 'D. 圖書館法施行細則' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】\n戰後地方公共圖書館的考核與常規營運標準，是遵循內政部頒布的「公共圖書館標準」。'
+    },
+    {
+        id: 'lib_p3_mc_06',
+        category: '圖書館史-終極混亂型',
+        questionText: '【原始題】課堂上老師提到李敖曾擔任哪一個圖書館志工（職員）？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 建國中學圖書館' },
+            { id: 'opt_b', text: 'B. 臺中一中圖書館' },
+            { id: 'opt_c', text: 'C. 成功高中圖書館' },
+            { id: 'opt_d', text: 'D. 高雄中學圖書館' }
+        ],
+        correctOptionId: 'opt_b',
+        explanation: '【正確答案：B】\n李敖大師高中時大放異彩、廣讀群書的地方即為「臺中一中圖書館」。'
+    },
+    {
+        id: 'lib_p3_mc_07',
+        category: '圖書館史-終極混亂型',
+        questionText: '【變形題】戒嚴時期的臺灣知識分子，若想跨越管制翻閱國外最新的期刊與第一手科技資料，最普遍且合法的管道是去哪裡？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 中研院圖書館' },
+            { id: 'opt_b', text: 'B. 國家圖書館' },
+            { id: 'opt_c', text: 'C. 美新處圖書館' },
+            { id: 'opt_d', text: 'D. 台灣大學圖書館' }
+        ],
+        correctOptionId: 'opt_c',
+        explanation: '【正確答案：C】\n資訊封鎖年代的知識綠洲：美國政府辦理的「美新處圖書館」。'
+    },
+    {
+        id: 'lib_p3_mc_08',
+        category: '圖書館史-終極混亂型',
+        questionText: '【原始題】民國時期圖書館發生媒體化（罐頭化）現象，造成此現象的人的書籍是哪一部？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 人人文庫' },
+            { id: 'opt_b', text: 'B. 企業文庫' },
+            { id: 'opt_c', text: 'C. 知識文庫' },
+            { id: 'opt_d', text: 'D. 萬有文庫' }
+        ],
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】\n原始考卷題目誤植為「媒體化」，依課程內容應為「罐頭化現象」，這套幫圖書館全套分類打包、買來就能原地開館的神書，正是商務印書館印製的《萬有文庫》。'
+    },
+    {
+        id: 'lib_p3_mc_09',
+        category: '圖書館史-終極混亂型',
+        questionText: '【變形題】寫出《天龍八部》、《笑傲江湖》的著名文學家金庸，早年曾經在下列何處擔任過館員？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 國家圖書館' },
+            { id: 'opt_b', text: 'B. 臺灣總督府圖書館' },
+            { id: 'opt_c', text: 'C. 國立臺灣圖書館' },
+            { id: 'opt_d', text: 'D. 中國國際圖書館' }
+        ],
+        correctOptionId: 'opt_a',
+        explanation: '【正確答案：A】\n金庸在赴港成為報人與寫武俠小說前，曾低調在「國家圖書館」（原中央圖書館）辛勤工作。'
+    },
+    {
+        id: 'lib_p3_mc_10',
+        category: '圖書館史-終極混亂型',
+        questionText: '【原始題】老師在國立臺灣圖書館所辦的借書證名稱為何？',
+        image: null,
+        options: [
+            { id: 'opt_a', text: 'A. 圖書館借書證' },
+            { id: 'opt_b', text: 'B. 戰後臺灣圖書館發展' },
+            { id: 'opt_c', text: 'C. 南島的知識巡禮' },
+            { id: 'opt_d', text: 'D. 知識的入場券' }
+        ],
+        correctOptionId: 'opt_d',
+        explanation: '【正確答案：D】\n老師與這家圖書館最浪漫的相遇憑證就是——「知識的入場券」。'
     }
 ];
 
