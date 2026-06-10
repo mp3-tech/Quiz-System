@@ -1442,7 +1442,14 @@ function renderActiveQuestion() {
 function finishQuiz() {
     const res = quizEngine.getResults();
 
-    // 1. 寫入歷史記錄
+    // 1. 寫入歷史記錄（含各分類統計，供雷達圖使用）
+    const categoryStats = {};
+    res.details.forEach(d => {
+        const cat = d.question.category || '未分類';
+        if (!categoryStats[cat]) categoryStats[cat] = { correct: 0, total: 0 };
+        categoryStats[cat].total++;
+        if (d.isCorrect) categoryStats[cat].correct++;
+    });
     qManager.addHistoryRecord({
         category: document.querySelector('input[name="quiz-category"]:checked')?.value || 'all',
         total: res.total,
@@ -1450,7 +1457,15 @@ function finishQuiz() {
         incorrectCount: res.incorrectCount,
         score: res.score,
         timeSpent: res.timeSpent,
-        mode: quizEngine.mode
+        mode: quizEngine.mode,
+        categoryStats
+    });
+
+    // 1b. 自動將答錯的題目加入錯題本
+    res.details.forEach(d => {
+        if (!d.isCorrect && d.question?.id) {
+            addToWrongBook(d.question.id);
+        }
     });
 
     // 2. 切換畫面
@@ -2363,3 +2378,697 @@ function handleImportImage(file) {
     };
     reader.readAsDataURL(file);
 }
+
+// ==========================================================================
+// 9. 知識解析瀏覽
+// ==========================================================================
+
+let knowledgeActiveCat = 'all';
+
+function renderKnowledge() {
+    const search = (document.getElementById('knowledge-search')?.value || '').toLowerCase();
+    const all = qManager.getAll();
+    const cats = ['all', ...qManager.getCategories()];
+
+    // 分類 tabs
+    const tabsEl = document.getElementById('knowledge-category-tabs');
+    if (tabsEl) {
+        tabsEl.innerHTML = cats.map(c => `
+            <button onclick="setKnowledgeCat('${c}')"
+                class="px-4 py-1.5 rounded-full text-xs font-bold border transition
+                ${knowledgeActiveCat === c ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-slate-600 border-slate-200 hover:border-primary-300'}">
+                ${c === 'all' ? '📚 全部' : c}
+            </button>`).join('');
+    }
+
+    const filtered = all.filter(q => {
+        const matchCat = knowledgeActiveCat === 'all' || q.category === knowledgeActiveCat;
+        const matchSearch = !search ||
+            q.questionText.toLowerCase().includes(search) ||
+            (q.explanation || '').toLowerCase().includes(search);
+        return matchCat && matchSearch;
+    });
+
+    const listEl = document.getElementById('knowledge-list');
+    if (!listEl) return;
+
+    if (!filtered.length) {
+        listEl.innerHTML = `<div class="text-center py-16 text-slate-400">
+            <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p>找不到相關內容</p></div>`;
+        return;
+    }
+
+    // Group by category
+    const groups = {};
+    filtered.forEach(q => {
+        const cat = q.category || '未分類';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(q);
+    });
+
+    listEl.innerHTML = Object.entries(groups).map(([cat, qs]) => `
+        <div class="space-y-3">
+            <h3 class="font-extrabold text-slate-700 flex items-center space-x-2">
+                <span class="w-1.5 h-6 bg-primary-500 rounded-full block"></span>
+                <span>${cat}</span>
+                <span class="text-xs font-normal text-slate-400">${qs.length} 題</span>
+            </h3>
+            ${qs.map(q => `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <button onclick="toggleKnowledge('k-${q.id}')" class="w-full text-left px-5 py-4 flex items-start justify-between hover:bg-slate-50 transition">
+                        <p class="font-semibold text-slate-800 text-sm leading-relaxed pr-4">${q.questionText}</p>
+                        <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5 transition-transform" id="icon-k-${q.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="k-${q.id}" class="hidden border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50">
+                        <div class="space-y-1.5">
+                            ${(q.options || []).map(o => `
+                                <div class="flex items-center space-x-2 text-sm ${o.id === q.correctOptionId ? 'text-emerald-700 font-bold' : 'text-slate-500'}">
+                                    <span class="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] ${o.id === q.correctOptionId ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}">${o.id === q.correctOptionId ? '✓' : '·'}</span>
+                                    <span>${o.text}</span>
+                                </div>`).join('')}
+                        </div>
+                        ${q.explanation ? `
+                        <div class="p-4 bg-white rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+                            <p class="font-bold text-slate-700 mb-2">💡 詳細解析</p>
+                            ${q.explanation}
+                        </div>` : ''}
+                    </div>
+                </div>`).join('')}
+        </div>`).join('');
+}
+
+function setKnowledgeCat(cat) {
+    knowledgeActiveCat = cat;
+    renderKnowledge();
+}
+
+function toggleKnowledge(id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById('icon-' + id);
+    if (!el) return;
+    el.classList.toggle('hidden');
+    if (icon) icon.style.transform = el.classList.contains('hidden') ? '' : 'rotate(180deg)';
+}
+
+// ==========================================================================
+// 10. 錯題本
+// ==========================================================================
+
+const WRONG_BOOK_KEY = 'quiz_wrong_book';
+
+function getWrongBook() {
+    try { return JSON.parse(localStorage.getItem(WRONG_BOOK_KEY)) || {}; } catch { return {}; }
+}
+
+function addToWrongBook(questionId) {
+    const wb = getWrongBook();
+    wb[questionId] = (wb[questionId] || 0) + 1;
+    localStorage.setItem(WRONG_BOOK_KEY, JSON.stringify(wb));
+}
+
+function removeFromWrongBook(questionId) {
+    const wb = getWrongBook();
+    delete wb[questionId];
+    localStorage.setItem(WRONG_BOOK_KEY, JSON.stringify(wb));
+}
+
+function renderWrongBook() {
+    const wb = getWrongBook();
+    const allQ = qManager.getAll();
+    const wrongQs = allQ.filter(q => wb[q.id]);
+
+    // Stats
+    const statsEl = document.getElementById('wrong-book-stats');
+    const byCategory = {};
+    wrongQs.forEach(q => {
+        const cat = q.category || '未分類';
+        byCategory[cat] = (byCategory[cat] || 0) + 1;
+    });
+    if (statsEl) {
+        statsEl.innerHTML = Object.entries(byCategory).map(([cat, count]) => `
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <span class="text-sm font-bold text-slate-700">${cat}</span>
+                <span class="text-2xl font-extrabold text-red-500">${count}</span>
+            </div>`).join('') || `<div class="col-span-3 text-center text-slate-400 py-4 text-sm">目前沒有錯題！繼續加油 🎉</div>`;
+    }
+
+    const listEl = document.getElementById('wrong-book-list');
+    if (!listEl) return;
+
+    if (!wrongQs.length) {
+        listEl.innerHTML = `<div class="text-center py-16 text-slate-400">
+            <svg class="w-16 h-16 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="font-bold text-slate-500">錯題本是空的</p>
+            <p class="text-sm mt-1">去做題目，錯題會自動收集到這裡</p></div>`;
+        return;
+    }
+
+    listEl.innerHTML = wrongQs.map(q => `
+        <div class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 flex items-start justify-between">
+                <div class="flex-1 pr-4">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="text-xs bg-red-50 text-red-500 border border-red-100 px-2 py-0.5 rounded-full font-bold">答錯 ${wb[q.id]} 次</span>
+                        <span class="text-xs text-slate-400">${q.category || ''}</span>
+                    </div>
+                    <p class="font-semibold text-slate-800 text-sm leading-relaxed">${q.questionText}</p>
+                </div>
+                <button onclick="removeFromWrongBook('${q.id}'); renderWrongBook();" class="flex-shrink-0 text-slate-300 hover:text-red-400 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="border-t border-slate-100 px-5 py-3 bg-slate-50 space-y-1.5">
+                ${(q.options || []).map(o => `
+                    <div class="flex items-center space-x-2 text-xs ${o.id === q.correctOptionId ? 'text-emerald-700 font-bold' : 'text-slate-400'}">
+                        <span class="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center ${o.id === q.correctOptionId ? 'bg-emerald-100' : 'bg-slate-200'}">${o.id === q.correctOptionId ? '✓' : '·'}</span>
+                        <span>${o.text}</span>
+                    </div>`).join('')}
+                ${q.explanation ? `<p class="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-200 leading-relaxed">💡 ${q.explanation.slice(0, 120)}${q.explanation.length > 120 ? '...' : ''}</p>` : ''}
+            </div>
+        </div>`).join('');
+}
+
+function clearWrongBook() {
+    if (!confirm('確定清除所有錯題記錄？')) return;
+    localStorage.removeItem(WRONG_BOOK_KEY);
+    renderWrongBook();
+}
+
+function startWrongBookQuiz() {
+    const wb = getWrongBook();
+    const wrongIds = Object.keys(wb);
+    if (!wrongIds.length) { alert('錯題本是空的，先去做題目吧！'); return; }
+    // Override active questions in quiz engine with wrong questions
+    const wrongQs = qManager.getAll().filter(q => wrongIds.includes(q.id));
+    quizEngine.activeQuestions = wrongQs;
+    quizEngine.currentIndex = 0;
+    quizEngine.answers = {};
+    quizEngine.startTime = Date.now();
+    switchTab('quiz-active');
+    renderActiveQuestion();
+}
+
+// ==========================================================================
+// 11. 網頁解答器
+// ==========================================================================
+
+let solverImageBase64 = null;
+
+function switchSolverTab(tab) {
+    const textArea  = document.getElementById('solver-text-area');
+    const imageArea = document.getElementById('solver-image-area');
+    const textBtn   = document.getElementById('solver-tab-text');
+    const imageBtn  = document.getElementById('solver-tab-image');
+    if (tab === 'text') {
+        textArea.classList.remove('hidden'); imageArea.classList.add('hidden');
+        textBtn.className  = 'flex-1 py-2 rounded-xl text-sm font-bold bg-primary-500 text-white shadow';
+        imageBtn.className = 'flex-1 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-500 hover:bg-slate-200';
+    } else {
+        textArea.classList.add('hidden'); imageArea.classList.remove('hidden');
+        imageBtn.className = 'flex-1 py-2 rounded-xl text-sm font-bold bg-primary-500 text-white shadow';
+        textBtn.className  = 'flex-1 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-500 hover:bg-slate-200';
+    }
+}
+
+function clearSolverImage() {
+    solverImageBase64 = null;
+    document.getElementById('solver-image-preview-box').classList.add('hidden');
+    document.getElementById('solver-image-file').value = '';
+}
+
+async function runSolver() {
+    if (!getApiKey()) { alert('請先到「AI 設定」設定 API Key！'); switchTab('ai-settings'); return; }
+    const btn = document.getElementById('solver-btn');
+    const btnText = document.getElementById('solver-btn-text');
+    btn.disabled = true; btnText.innerText = '解題中...';
+    document.getElementById('solver-result').classList.add('hidden');
+
+    const subject = document.getElementById('solver-subject').value;
+    const isImageMode = !document.getElementById('solver-image-area').classList.contains('hidden');
+
+    const systemPrompt = `你是一位頂尖的${subject || '學科'}解題老師。
+解題要求：
+1. 先清楚寫出「題目分析」
+2. 列出「解題步驟」（逐步說明，帶公式）
+3. 給出「最終答案」並加框強調
+4. 最後補充「相關知識點」
+請用繁體中文，條理清晰，讓學生一看就懂。`;
+
+    try {
+        let messages;
+        if (isImageMode && solverImageBase64) {
+            messages = [{ role: 'user', content: [
+                { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: solverImageBase64 } },
+                { type: 'text', text: '請解答圖片中的題目，詳細說明解題步驟。' }
+            ]}];
+        } else {
+            const text = document.getElementById('solver-input').value.trim();
+            if (!text) { alert('請輸入題目！'); btn.disabled = false; btnText.innerText = '解題'; return; }
+            messages = [{ role: 'user', content: `請解答以下題目：\n\n${text}` }];
+        }
+
+        const answer = await callClaude(messages, 2000, systemPrompt);
+        document.getElementById('solver-answer').innerText = answer;
+        document.getElementById('solver-result').classList.remove('hidden');
+        // 暫存供存入筆記用
+        window._lastSolverAnswer = answer;
+        window._lastSolverQ = isImageMode ? '[圖片題目]' : document.getElementById('solver-input').value.slice(0, 80);
+    } catch(e) {
+        alert('解題失敗：' + e.message);
+    }
+
+    btn.disabled = false; btnText.innerText = '解題';
+}
+
+function addSolverToNotes() {
+    const title = '解答：' + (window._lastSolverQ || '題目');
+    const content = window._lastSolverAnswer || '';
+    openNoteEditor(title, content, '解題記錄');
+    switchTab('notes');
+}
+
+// 解答器圖片初始化（在 DOMContentLoaded 後呼叫）
+function initSolverImageUpload() {
+    const dropzone = document.getElementById('solver-dropzone');
+    const fileInput = document.getElementById('solver-image-file');
+    if (!dropzone || !fileInput) return;
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('border-primary-400'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-primary-400'));
+    dropzone.addEventListener('drop', e => {
+        e.preventDefault(); dropzone.classList.remove('border-primary-400');
+        if (e.dataTransfer.files[0]) handleSolverImage(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) handleSolverImage(e.target.files[0]); });
+}
+
+function handleSolverImage(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        solverImageBase64 = e.target.result.split(',')[1];
+        document.getElementById('solver-image-preview').src = e.target.result;
+        document.getElementById('solver-image-preview-box').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+// ==========================================================================
+// 12. 學習成效分析（雷達圖 + 趨勢圖 + 匯出）
+// ==========================================================================
+
+function renderStats() {
+    const history = qManager.history;
+    const wb = getWrongBook();
+    const allQ = qManager.getAll();
+
+    // 總覽數字
+    const totalDone = history.reduce((s, h) => s + (h.total || 0), 0);
+    const avgScore  = history.length ? Math.round(history.reduce((s, h) => s + (h.score || 0), 0) / history.length) : 0;
+    const wrongCount = Object.keys(wb).length;
+    const streak = calcStreak(history);
+
+    document.getElementById('stats-total-done').innerText  = totalDone;
+    document.getElementById('stats-avg-score').innerText   = avgScore + '%';
+    document.getElementById('stats-wrong-count').innerText = wrongCount;
+    document.getElementById('stats-streak').innerText      = streak;
+
+    // 各分類正確率
+    const catStats = {};
+    history.forEach(h => {
+        if (!h.categoryStats) return;
+        Object.entries(h.categoryStats).forEach(([cat, s]) => {
+            if (!catStats[cat]) catStats[cat] = { correct: 0, total: 0 };
+            catStats[cat].correct += s.correct || 0;
+            catStats[cat].total   += s.total   || 0;
+        });
+    });
+
+    const barsEl = document.getElementById('stats-category-bars');
+    if (barsEl) {
+        if (!Object.keys(catStats).length) {
+            barsEl.innerHTML = '<p class="text-sm text-slate-400 text-center py-8">尚無測驗記錄</p>';
+        } else {
+            barsEl.innerHTML = Object.entries(catStats).map(([cat, s]) => {
+                const pct = s.total ? Math.round(s.correct / s.total * 100) : 0;
+                const color = pct >= 80 ? 'bg-emerald-500' : pct >= 60 ? 'bg-amber-500' : 'bg-red-500';
+                return `
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-semibold text-slate-600">
+                        <span>${cat}</span><span>${pct}% (${s.correct}/${s.total})</span>
+                    </div>
+                    <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="${color} h-full rounded-full transition-all duration-700" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    drawRadarChart(catStats);
+    drawTrendChart(history);
+}
+
+function calcStreak(history) {
+    if (!history.length) return 0;
+    const days = [...new Set(history.map(h => h.date ? h.date.split(' ')[0] : ''))].filter(Boolean).sort().reverse();
+    let streak = 0;
+    const today = new Date().toLocaleDateString('zh-TW');
+    for (let i = 0; i < days.length; i++) {
+        const d = new Date(days[i]);
+        const expected = new Date(); expected.setDate(expected.getDate() - i);
+        if (Math.abs(d - expected) < 86400000) streak++;
+        else break;
+    }
+    return streak;
+}
+
+function drawRadarChart(catStats) {
+    const canvas = document.getElementById('radar-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, r = Math.min(W, H) * 0.38;
+
+    ctx.clearRect(0, 0, W, H);
+    const cats = Object.keys(catStats);
+    if (!cats.length) {
+        ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('尚無測驗資料', cx, cy); return;
+    }
+
+    const n = cats.length;
+    const angleStep = (2 * Math.PI) / n;
+
+    // Draw grid
+    for (let level = 1; level <= 5; level++) {
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+            const angle = i * angleStep - Math.PI / 2;
+            const x = cx + r * (level / 5) * Math.cos(angle);
+            const y = cy + r * (level / 5) * Math.sin(angle);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    // Draw axes
+    for (let i = 0; i < n; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.stroke();
+        // Labels
+        const lx = cx + (r + 24) * Math.cos(angle);
+        const ly = cy + (r + 24) * Math.sin(angle);
+        ctx.fillStyle = '#475569'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+        const shortCat = cats[i].replace('統計第', 'Ch').replace('章', '');
+        ctx.fillText(shortCat, lx, ly + 4);
+    }
+
+    // Draw data polygon
+    ctx.beginPath();
+    cats.forEach((cat, i) => {
+        const s = catStats[cat];
+        const pct = s.total ? s.correct / s.total : 0;
+        const angle = i * angleStep - Math.PI / 2;
+        const x = cx + r * pct * Math.cos(angle);
+        const y = cy + r * pct * Math.sin(angle);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(14,165,233,0.2)'; ctx.fill();
+    ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 2; ctx.stroke();
+}
+
+function drawTrendChart(history) {
+    const canvas = document.getElementById('trend-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const data = history.slice(-10).map(h => ({ score: h.score || 0, label: h.date ? h.date.split(' ')[0].slice(5) : '' }));
+    if (data.length < 2) {
+        ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('至少需要 2 次測驗記錄', W/2, H/2); return;
+    }
+
+    const pad = { t: 20, b: 40, l: 40, r: 20 };
+    const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
+    const xStep = gW / (data.length - 1);
+
+    // Grid lines
+    [0, 25, 50, 75, 100].forEach(v => {
+        const y = pad.t + gH * (1 - v / 100);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y);
+        ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = '#94a3b8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText(v + '%', pad.l - 5, y + 4);
+    });
+
+    // Line
+    ctx.beginPath();
+    data.forEach((d, i) => {
+        const x = pad.l + i * xStep;
+        const y = pad.t + gH * (1 - d.score / 100);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // Fill under line
+    ctx.beginPath();
+    data.forEach((d, i) => {
+        const x = pad.l + i * xStep;
+        const y = pad.t + gH * (1 - d.score / 100);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(pad.l + (data.length - 1) * xStep, pad.t + gH);
+    ctx.lineTo(pad.l, pad.t + gH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(14,165,233,0.1)'; ctx.fill();
+
+    // Points + labels
+    data.forEach((d, i) => {
+        const x = pad.l + i * xStep;
+        const y = pad.t + gH * (1 - d.score / 100);
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#0ea5e9'; ctx.fill();
+        ctx.fillStyle = '#334155'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(d.score + '%', x, y - 10);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '9px sans-serif';
+        ctx.fillText(d.label, x, pad.t + gH + 18);
+    });
+}
+
+function exportPDF() {
+    const printWin = window.open('', '_blank');
+    const history = qManager.history;
+    const wb = getWrongBook();
+    const allQ = qManager.getAll();
+    const wrongQs = allQ.filter(q => wb[q.id]);
+    const avgScore = history.length ? Math.round(history.reduce((s, h) => s + (h.score || 0), 0) / history.length) : 0;
+
+    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>學習成效報告</title>
+<style>body{font-family:sans-serif;padding:40px;color:#1e293b;} h1{color:#0284c7;} h2{color:#334155;border-bottom:2px solid #e2e8f0;padding-bottom:8px;} table{width:100%;border-collapse:collapse;} td,th{border:1px solid #e2e8f0;padding:8px;text-align:left;font-size:13px;} th{background:#f8fafc;} .score{font-size:2em;font-weight:900;color:#0284c7;}</style>
+</head><body>
+<h1>📊 學習成效報告</h1>
+<p>生成時間：${new Date().toLocaleString('zh-TW')}</p>
+<div class="score">平均分數：${avgScore}%</div>
+<h2>測驗歷史（最近 10 次）</h2>
+<table><tr><th>日期</th><th>分類</th><th>分數</th><th>錯題數</th><th>耗時</th></tr>
+${history.slice(-10).map(h => `<tr><td>${h.date}</td><td>${h.category}</td><td>${h.score}%</td><td>${h.incorrectCount}</td><td>${h.timeSpent}</td></tr>`).join('')}
+</table>
+<h2>錯題清單（${wrongQs.length} 題）</h2>
+${wrongQs.map((q, i) => `<p><b>${i+1}. ${q.questionText}</b><br><small>✓ ${q.options?.find(o => o.id === q.correctOptionId)?.text || ''}</small></p>`).join('')}
+</body></html>`);
+    printWin.document.close();
+    printWin.print();
+}
+
+function exportMarkdown() {
+    const history = qManager.history;
+    const wb = getWrongBook();
+    const allQ = qManager.getAll();
+    const wrongQs = allQ.filter(q => wb[q.id]);
+    const avgScore = history.length ? Math.round(history.reduce((s, h) => s + (h.score || 0), 0) / history.length) : 0;
+
+    let md = `# 📊 學習成效報告\n\n生成時間：${new Date().toLocaleString('zh-TW')}\n\n## 總覽\n\n- 平均分數：**${avgScore}%**\n- 測驗次數：${history.length}\n- 錯題累積：${Object.keys(wb).length} 題\n\n## 測驗歷史\n\n| 日期 | 分類 | 分數 | 錯題 |\n|------|------|------|------|\n`;
+    history.slice(-20).forEach(h => { md += `| ${h.date} | ${h.category} | ${h.score}% | ${h.incorrectCount} |\n`; });
+    md += `\n## 錯題清單\n\n`;
+    wrongQs.forEach((q, i) => {
+        const ans = q.options?.find(o => o.id === q.correctOptionId)?.text || '';
+        md += `### ${i+1}. ${q.questionText}\n\n**正確答案：** ${ans}\n\n${q.explanation ? `> ${q.explanation.slice(0, 200)}\n\n` : ''}`;
+    });
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `學習成效報告_${new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')}.md`;
+    a.click();
+}
+
+// ==========================================================================
+// 13. 學習筆記
+// ==========================================================================
+
+const NOTES_KEY = 'quiz_notes';
+let editingNoteId = null;
+
+function getNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || []; } catch { return []; }
+}
+function saveNotes(notes) { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); }
+
+function openNoteEditor(title = '', content = '', tag = '') {
+    document.getElementById('note-title-input').value   = title;
+    document.getElementById('note-content-input').value = content;
+    const tagSel = document.getElementById('note-tag-input');
+    if (tag && tagSel) {
+        // Add tag option if not exist
+        if (![...tagSel.options].some(o => o.value === tag)) {
+            const opt = document.createElement('option'); opt.value = tag; opt.text = tag;
+            tagSel.appendChild(opt);
+        }
+        tagSel.value = tag;
+    }
+    editingNoteId = null;
+    document.getElementById('note-editor').classList.remove('hidden');
+    document.getElementById('note-title-input').focus();
+}
+
+function closeNoteEditor() {
+    document.getElementById('note-editor').classList.add('hidden');
+    editingNoteId = null;
+}
+
+function saveNote() {
+    const title   = document.getElementById('note-title-input').value.trim();
+    const content = document.getElementById('note-content-input').value.trim();
+    const tag     = document.getElementById('note-tag-input').value;
+    if (!title && !content) { alert('請輸入筆記內容！'); return; }
+
+    const notes = getNotes();
+    if (editingNoteId) {
+        const idx = notes.findIndex(n => n.id === editingNoteId);
+        if (idx !== -1) { notes[idx] = { ...notes[idx], title, content, tag, updatedAt: new Date().toLocaleString('zh-TW') }; }
+    } else {
+        notes.unshift({ id: 'note_' + Date.now(), title: title || '無標題', content, tag, createdAt: new Date().toLocaleString('zh-TW'), updatedAt: new Date().toLocaleString('zh-TW') });
+    }
+    saveNotes(notes);
+    closeNoteEditor();
+    renderNotes();
+}
+
+function editNote(id) {
+    const note = getNotes().find(n => n.id === id);
+    if (!note) return;
+    editingNoteId = id;
+    document.getElementById('note-title-input').value   = note.title;
+    document.getElementById('note-content-input').value = note.content;
+    const tagSel = document.getElementById('note-tag-input');
+    if (tagSel) tagSel.value = note.tag || '';
+    document.getElementById('note-editor').classList.remove('hidden');
+    document.getElementById('note-title-input').focus();
+}
+
+function deleteNote(id) {
+    if (!confirm('確定刪除此筆記？')) return;
+    saveNotes(getNotes().filter(n => n.id !== id));
+    renderNotes();
+}
+
+function renderNotes() {
+    const search = (document.getElementById('notes-search')?.value || '').toLowerCase();
+    const filterTag = document.getElementById('notes-filter-tag')?.value || '';
+    const notes = getNotes();
+
+    // Update tag dropdowns
+    const allTags = [...new Set(notes.map(n => n.tag).filter(Boolean))];
+    ['note-tag-input', 'notes-filter-tag'].forEach(selId => {
+        const sel = document.getElementById(selId);
+        if (!sel) return;
+        const curVal = sel.value;
+        const isFilter = selId === 'notes-filter-tag';
+        sel.innerHTML = isFilter ? '<option value="">全部標籤</option>' : '<option value="">無標籤</option>';
+        allTags.forEach(t => {
+            const opt = document.createElement('option'); opt.value = t; opt.text = t;
+            sel.appendChild(opt);
+        });
+        sel.value = curVal;
+    });
+
+    const filtered = notes.filter(n => {
+        const matchSearch = !search || n.title.toLowerCase().includes(search) || n.content.toLowerCase().includes(search);
+        const matchTag = !filterTag || n.tag === filterTag;
+        return matchSearch && matchTag;
+    });
+
+    const listEl = document.getElementById('notes-list');
+    if (!listEl) return;
+
+    if (!filtered.length) {
+        listEl.innerHTML = `<div class="text-center py-16 text-slate-400">
+            <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <p>${notes.length ? '找不到符合的筆記' : '還沒有任何筆記，新增第一則吧！'}</p></div>`;
+        return;
+    }
+
+    listEl.innerHTML = filtered.map(n => `
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <h4 class="font-bold text-slate-800 text-sm">${n.title}</h4>
+                        ${n.tag ? `<span class="text-[10px] bg-primary-50 text-primary-600 border border-primary-100 px-2 py-0.5 rounded-full font-bold">${n.tag}</span>` : ''}
+                    </div>
+                    <p class="text-xs text-slate-400">${n.updatedAt}</p>
+                </div>
+                <div class="flex items-center space-x-1 flex-shrink-0">
+                    <button onclick="editNote('${n.id}')" class="p-2 text-slate-400 hover:text-primary-500 transition rounded-lg hover:bg-primary-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button onclick="deleteNote('${n.id}')" class="p-2 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="border-t border-slate-100 px-5 py-3 bg-slate-50">
+                <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">${n.content.slice(0, 300)}${n.content.length > 300 ? '...' : ''}</p>
+            </div>
+        </div>`).join('');
+}
+
+function exportNotesMarkdown() {
+    const notes = getNotes();
+    if (!notes.length) { alert('沒有任何筆記！'); return; }
+    let md = `# 📝 學習筆記\n\n匯出時間：${new Date().toLocaleString('zh-TW')}\n\n---\n\n`;
+    notes.forEach(n => {
+        md += `## ${n.title}\n`;
+        if (n.tag) md += `**標籤：** ${n.tag}  \n`;
+        md += `**更新：** ${n.updatedAt}\n\n${n.content}\n\n---\n\n`;
+    });
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `學習筆記_${new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')}.md`;
+    a.click();
+}
+
+// ==========================================================================
+// 14. 整合：作答結果加入錯題本 + switchTab 擴充
+// ==========================================================================
+
+// 擴充 switchTab：進入新頁面時初始化
+const _aiSwitchTab = window.switchTab;
+window.switchTab = function(tabId) {
+    _aiSwitchTab(tabId);
+    if (tabId === 'knowledge')   renderKnowledge();
+    if (tabId === 'wrong-book')  renderWrongBook();
+    if (tabId === 'stats')       renderStats();
+    if (tabId === 'notes')       renderNotes();
+};
+
+// 擴充 DOMContentLoaded：初始化新功能
+document.addEventListener('DOMContentLoaded', () => {
+    initSolverImageUpload();
+});
